@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="../favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ניהול לקוחות והרצאות</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">ניהול <span>לקוחות והרצאות</span></div>
+        <nav class="tabs" id="tabs"></nav>
+        <button class="btn" data-action="export-data">גיבוי</button>
+        <button class="btn" data-action="import-data">שחזור</button>
+      </div>
+    </header>
+
+    <main id="view"></main>
+
+    <div id="modal-root"></div>
+    <input type="file" id="import-file" accept="application/json" hidden />
+
+    <script src="app.js"></script>
+  </body>
+</html>
