@@ -44,15 +44,29 @@ code{font-size:.8rem}
 export function registerAdminDashboard(server: FastifyInstance, app: App): void {
   server.get('/admin', async (req: FastifyRequest, reply: FastifyReply) => {
     if (!isAuthorised(req, app)) {
-      return reply.code(401).type('text/html').send('<h1>401</h1><p>Add ?token=&lt;ADMIN_TOKEN&gt;</p>');
+      return reply
+        .code(401)
+        .type('text/html')
+        .send('<h1>401</h1><p>Add ?token=&lt;ADMIN_TOKEN&gt;</p>');
     }
 
     const users = await app.repos.users.listActive();
     const user = users[0];
-    if (!user) return reply.type('text/html').send(`<style>${STYLE}</style><h1>No user registered yet</h1>`);
+    if (!user)
+      return reply.type('text/html').send(`<style>${STYLE}</style><h1>No user registered yet</h1>`);
 
     const now = new Date();
-    const [tasks, counts, connections, calendars, mailboxes, integrations, failures, audit, candidates] = await Promise.all([
+    const [
+      tasks,
+      counts,
+      connections,
+      calendars,
+      mailboxes,
+      integrations,
+      failures,
+      audit,
+      candidates,
+    ] = await Promise.all([
       app.repos.tasks.list(user.id, { limit: 40, includeSnoozed: true }),
       app.repos.tasks.countByStatus(user.id),
       app.repos.oauth.listForUser(user.id),
@@ -67,7 +81,9 @@ export function registerAdminDashboard(server: FastifyInstance, app: App): void 
     const open = Object.entries(counts)
       .filter(([s]) => !['completed', 'cancelled'].includes(s))
       .reduce((sum, [, n]) => sum + n, 0);
-    const overdue = tasks.filter((t) => t.due_at && t.due_at < now && t.status !== 'completed').length;
+    const overdue = tasks.filter(
+      (t) => t.due_at && t.due_at < now && t.status !== 'completed',
+    ).length;
     const sched = app.scheduler.status();
 
     const connectionRows = connections

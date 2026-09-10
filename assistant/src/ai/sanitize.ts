@@ -28,16 +28,48 @@
 type InjectionSeverity = 'override' | 'destructive';
 
 const INJECTION_PATTERNS: { re: RegExp; label: string; severity: InjectionSeverity }[] = [
-  { re: /ignore\s+(all\s+)?(previous|prior|above)\s+instructions?/i, label: 'ignore_previous_instructions', severity: 'override' },
-  { re: /disregard\s+(all\s+)?(previous|prior|above)/i, label: 'disregard_previous', severity: 'override' },
-  { re: /(you\s+are\s+now|from\s+now\s+on\s+you\s+are)\s+an?\s*\w+/i, label: 'role_reassignment', severity: 'override' },
+  {
+    re: /ignore\s+(all\s+)?(previous|prior|above)\s+instructions?/i,
+    label: 'ignore_previous_instructions',
+    severity: 'override',
+  },
+  {
+    re: /disregard\s+(all\s+)?(previous|prior|above)/i,
+    label: 'disregard_previous',
+    severity: 'override',
+  },
+  {
+    re: /(you\s+are\s+now|from\s+now\s+on\s+you\s+are)\s+an?\s*\w+/i,
+    label: 'role_reassignment',
+    severity: 'override',
+  },
   { re: /system\s*prompt/i, label: 'system_prompt_reference', severity: 'override' },
-  { re: /התעלם\s+מ(כל\s+)?ההוראות/, label: 'ignore_previous_instructions_he', severity: 'override' },
-  { re: /<\/?(system|assistant|user|instructions?)>/i, label: 'fake_role_tag', severity: 'override' },
+  {
+    re: /התעלם\s+מ(כל\s+)?ההוראות/,
+    label: 'ignore_previous_instructions_he',
+    severity: 'override',
+  },
+  {
+    re: /<\/?(system|assistant|user|instructions?)>/i,
+    label: 'fake_role_tag',
+    severity: 'override',
+  },
   { re: /\[\/?(INST|SYS)\]/i, label: 'fake_chat_template', severity: 'override' },
-  { re: /\b(delete|remove|drop)\s+(all|every)\s+(tasks?|events?|data|records?)/i, label: 'bulk_delete_request', severity: 'destructive' },
-  { re: /\bmark\s+(all|every)\s+tasks?\s+(as\s+)?(done|completed)/i, label: 'bulk_complete_request', severity: 'destructive' },
-  { re: /מחק\s+את\s+כל\s+ה(משימות|נתונים)/, label: 'bulk_delete_request_he', severity: 'destructive' },
+  {
+    re: /\b(delete|remove|drop)\s+(all|every)\s+(tasks?|events?|data|records?)/i,
+    label: 'bulk_delete_request',
+    severity: 'destructive',
+  },
+  {
+    re: /\bmark\s+(all|every)\s+tasks?\s+(as\s+)?(done|completed)/i,
+    label: 'bulk_complete_request',
+    severity: 'destructive',
+  },
+  {
+    re: /מחק\s+את\s+כל\s+ה(משימות|נתונים)/,
+    label: 'bulk_delete_request_he',
+    severity: 'destructive',
+  },
 ];
 
 export interface SanitizedContent {

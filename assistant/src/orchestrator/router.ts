@@ -37,8 +37,14 @@ import { errorText } from '../utils/errors.js';
 
 /** Intents that are allowed to modify or destroy data. */
 const MUTATING_INTENTS = new Set([
-  'CREATE_TASK', 'UPDATE_TASK', 'COMPLETE_TASK', 'DELETE_TASK', 'SNOOZE_TASK',
-  'CREATE_EVENT', 'UPDATE_EVENT', 'DELETE_EVENT',
+  'CREATE_TASK',
+  'UPDATE_TASK',
+  'COMPLETE_TASK',
+  'DELETE_TASK',
+  'SNOOZE_TASK',
+  'CREATE_EVENT',
+  'UPDATE_EVENT',
+  'DELETE_EVENT',
 ]);
 
 /** Below this, a mutating intent is questioned rather than executed. */
@@ -81,7 +87,9 @@ export class Router {
 
     // 3. Intent detection.
     const state = await ctx.repos.conversation.get(ctx.user.id);
-    const lastTask = state?.last_task_id ? await ctx.repos.tasks.findById(ctx.user.id, state.last_task_id) : null;
+    const lastTask = state?.last_task_id
+      ? await ctx.repos.tasks.findById(ctx.user.id, state.last_task_id)
+      : null;
     const intentResult = await this.engine.detect(text, {
       now: ctx.now,
       timezone: ctx.timezone,
@@ -196,7 +204,9 @@ export class Router {
         return { reply: HELP_TEXT };
       case 'UNKNOWN':
       default:
-        return { reply: 'לא בטוח שהבנתי. אפשר לנסח אחרת, או לכתוב "עזרה" כדי לראות מה אני יודע לעשות.' };
+        return {
+          reply: 'לא בטוח שהבנתי. אפשר לנסח אחרת, או לכתוב "עזרה" כדי לראות מה אני יודע לעשות.',
+        };
     }
   }
 
@@ -211,7 +221,9 @@ export class Router {
   private async handleEmailQuery(ctx: HandlerContext): Promise<HandlerResult> {
     const pending = await ctx.repos.email.listCandidates(ctx.user.id, 'pending', 10);
     if (!pending.length) return { reply: '📧 אין משימות חדשות שזיהיתי במיילים.' };
-    const lines = pending.map((c, i) => `${i + 1}. ${c.title}${c.due_date ? ` (עד ${c.due_date})` : ''}`);
+    const lines = pending.map(
+      (c, i) => `${i + 1}. ${c.title}${c.due_date ? ` (עד ${c.due_date})` : ''}`,
+    );
     return { reply: `📧 משימות שזיהיתי במיילים וממתינות לאישור:\n\n${lines.join('\n')}` };
   }
 
@@ -232,13 +244,21 @@ export class Router {
       if (action === 'cand_skip') {
         await ctx.repos.email.setCandidateStatus(candidate.id, 'ignored');
         await ctx.repos.audit.log({
-          user_id: ctx.user.id, action: 'EMAIL_TASK_IGNORED', entity_type: 'email_task_candidate',
-          entity_id: candidate.id, status: 'skipped',
+          user_id: ctx.user.id,
+          action: 'EMAIL_TASK_IGNORED',
+          entity_type: 'email_task_candidate',
+          entity_id: candidate.id,
+          status: 'skipped',
         });
         return { reply: 'התעלמתי.' };
       }
       if (action === 'cand_later') {
-        await ctx.repos.email.setCandidateStatus(candidate.id, 'snoozed', null, addMinutes(ctx.now, 240));
+        await ctx.repos.email.setCandidateStatus(
+          candidate.id,
+          'snoozed',
+          null,
+          addMinutes(ctx.now, 240),
+        );
         return { reply: 'אזכיר לך על זה מאוחר יותר.' };
       }
       const created = await ctx.tasks.create(
@@ -257,8 +277,11 @@ export class Router {
       );
       await ctx.repos.email.setCandidateStatus(candidate.id, 'approved', created.task.id);
       await ctx.repos.audit.log({
-        user_id: ctx.user.id, action: 'EMAIL_TASK_APPROVED', entity_type: 'task',
-        entity_id: created.task.id, result: { candidate_id: candidate.id },
+        user_id: ctx.user.id,
+        action: 'EMAIL_TASK_APPROVED',
+        entity_type: 'task',
+        entity_id: created.task.id,
+        result: { candidate_id: candidate.id },
       });
       return { reply: `✅ הוספתי: ${created.task.title}`, focusTaskId: created.task.id };
     }
@@ -278,12 +301,18 @@ export class Router {
       case 'snooze60': {
         const until = addMinutes(ctx.now, 60);
         await ctx.tasks.snooze(ctx.user, task, until, ctx.settings);
-        return { reply: `⏰ אזכיר ${describeInstantHe(until, ctx.timezone, ctx.now)}`, focusTaskId: task.id };
+        return {
+          reply: `⏰ אזכיר ${describeInstantHe(until, ctx.timezone, ctx.now)}`,
+          focusTaskId: task.id,
+        };
       }
       case 'tomorrow': {
         const until = addMinutes(ctx.now, 24 * 60);
         await ctx.tasks.snooze(ctx.user, task, until, ctx.settings);
-        return { reply: `🌅 אזכיר ${describeInstantHe(until, ctx.timezone, ctx.now)}`, focusTaskId: task.id };
+        return {
+          reply: `🌅 אזכיר ${describeInstantHe(until, ctx.timezone, ctx.now)}`,
+          focusTaskId: task.id,
+        };
       }
       default:
         return null;

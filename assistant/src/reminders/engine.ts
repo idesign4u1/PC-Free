@@ -2,11 +2,7 @@ import type { Repositories } from '../db/repositories.js';
 import type { Settings, Task, TaskReminder, User } from '../domain/types.js';
 import type { Messenger } from '../whatsapp/messenger.js';
 import { formatReminder, reminderButtons } from '../whatsapp/formatter.js';
-import {
-  addMinutes,
-  isWithinQuietHours,
-  nextTimeOutsideQuietHours,
-} from '../utils/time.js';
+import { addMinutes, isWithinQuietHours, nextTimeOutsideQuietHours } from '../utils/time.js';
 import { logger } from '../utils/logger.js';
 import { errorText } from '../utils/errors.js';
 
@@ -43,7 +39,13 @@ export class ReminderEngine {
   ) {}
 
   async dispatchDue(now: Date, batchSize: number): Promise<ReminderDispatchSummary> {
-    const summary: ReminderDispatchSummary = { claimed: 0, sent: 0, deferred: 0, cancelled: 0, failed: 0 };
+    const summary: ReminderDispatchSummary = {
+      claimed: 0,
+      sent: 0,
+      deferred: 0,
+      cancelled: 0,
+      failed: 0,
+    };
     const due = await this.repos.reminders.claimDue(now, batchSize);
     summary.claimed = due.length;
 
@@ -60,7 +62,10 @@ export class ReminderEngine {
     return summary;
   }
 
-  private async deliver(reminder: TaskReminder, now: Date): Promise<'sent' | 'deferred' | 'cancelled' | 'failed'> {
+  private async deliver(
+    reminder: TaskReminder,
+    now: Date,
+  ): Promise<'sent' | 'deferred' | 'cancelled' | 'failed'> {
     const user = await this.repos.users.findById(reminder.user_id);
     const task = await this.repos.tasks.findById(reminder.user_id, reminder.task_id);
 
@@ -75,8 +80,15 @@ export class ReminderEngine {
 
     const settings = await this.repos.settings.get(user.id);
 
-    if (isWithinQuietHours(now, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end)) {
-      const until = nextTimeOutsideQuietHours(now, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end);
+    if (
+      isWithinQuietHours(now, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end)
+    ) {
+      const until = nextTimeOutsideQuietHours(
+        now,
+        user.timezone,
+        settings.quiet_hours_start,
+        settings.quiet_hours_end,
+      );
       await this.repos.reminders.defer(reminder.id, until, 'quiet hours');
       return 'deferred';
     }
@@ -93,7 +105,11 @@ export class ReminderEngine {
       if (result.skippedReason === 'window_closed_no_template') {
         // Retry after the window would reopen rather than failing permanently —
         // the user messaging us at any point re-opens it.
-        await this.repos.reminders.defer(reminder.id, addMinutes(now, 60), 'waiting for an open messaging window');
+        await this.repos.reminders.defer(
+          reminder.id,
+          addMinutes(now, 60),
+          'waiting for an open messaging window',
+        );
         return 'deferred';
       }
       await this.repos.reminders.markFailed(reminder.id, result.error ?? 'send failed');
@@ -102,7 +118,9 @@ export class ReminderEngine {
 
     await this.repos.reminders.markSent(reminder.id);
     await this.repos.conversation.setLastTask(user.id, task.id);
-    await this.repos.tasks.addEvent(user.id, task.id, 'reminder_sent', { reminder_id: reminder.id });
+    await this.repos.tasks.addEvent(user.id, task.id, 'reminder_sent', {
+      reminder_id: reminder.id,
+    });
     await this.repos.audit.log({
       user_id: user.id,
       action: 'SEND_REMINDER',
@@ -133,8 +151,15 @@ export class ReminderEngine {
     if (nextIndex > settings.max_followups) return;
 
     let at = addMinutes(now, settings.follow_up_interval_minutes);
-    if (isWithinQuietHours(at, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end)) {
-      at = nextTimeOutsideQuietHours(at, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end);
+    if (
+      isWithinQuietHours(at, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end)
+    ) {
+      at = nextTimeOutsideQuietHours(
+        at,
+        user.timezone,
+        settings.quiet_hours_start,
+        settings.quiet_hours_end,
+      );
     }
     await this.repos.reminders.create({
       task_id: task.id,

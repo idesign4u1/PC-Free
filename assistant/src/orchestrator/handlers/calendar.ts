@@ -15,7 +15,10 @@ import {
 import { errorText, ReauthRequiredError } from '../../utils/errors.js';
 
 /** Resolves the local date a calendar question is about. */
-function targetDate(ctx: HandlerContext, intent: Intent): { date: LocalDate; label: string; isWeek: boolean } {
+function targetDate(
+  ctx: HandlerContext,
+  intent: Intent,
+): { date: LocalDate; label: string; isWeek: boolean } {
   const today = todayInZone(ctx.timezone, ctx.now);
   const q = intent.query;
 
@@ -23,7 +26,12 @@ function targetDate(ctx: HandlerContext, intent: Intent): { date: LocalDate; lab
     return { date: today, label: q.range === 'this_week' ? 'השבוע' : 'שבוע הבא', isWeek: true };
   }
   const spec = resolveDateSpec(q?.date ?? null, ctx);
-  if (spec.date) return { date: spec.date, label: describeDateHe(spec.date, ctx.timezone, ctx.now), isWeek: false };
+  if (spec.date)
+    return {
+      date: spec.date,
+      label: describeDateHe(spec.date, ctx.timezone, ctx.now),
+      isWeek: false,
+    };
 
   if (q?.range === 'tomorrow') {
     return { date: addDaysLocal(today, 1, ctx.timezone), label: 'מחר', isWeek: false };
@@ -31,7 +39,10 @@ function targetDate(ctx: HandlerContext, intent: Intent): { date: LocalDate; lab
   return { date: today, label: 'היום', isWeek: false };
 }
 
-export async function handleCalendarQuery(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleCalendarQuery(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const accounts = await ctx.calendar.accounts(ctx.user);
   if (!accounts.length) {
     return { reply: 'עדיין לא חיברת יומן. שלח /connect כדי לחבר Google או Outlook.' };
@@ -46,7 +57,8 @@ export async function handleCalendarQuery(ctx: HandlerContext, intent: Intent): 
         ? { start: week.end, end: new Date(week.end.getTime() + 7 * 86_400_000) }
         : { start: week.start, end: week.end };
     const { events, degraded } = await ctx.calendar.fetchRange(ctx.user, range);
-    if (!events.length) return { reply: formatAgenda([], ctx.timezone, `📅 ${target.label}`, degraded) };
+    if (!events.length)
+      return { reply: formatAgenda([], ctx.timezone, `📅 ${target.label}`, degraded) };
 
     // Group by local day so a week reads as a week, not a wall of times.
     const byDay = new Map<string, typeof events>();
@@ -74,7 +86,10 @@ export async function handleCalendarQuery(ctx: HandlerContext, intent: Intent): 
   return { reply: formatAgenda(events, ctx.timezone, `📅 ${target.label}`, degraded), degraded };
 }
 
-export async function handleFreeTimeQuery(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleFreeTimeQuery(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const accounts = await ctx.calendar.accounts(ctx.user);
   if (!accounts.length) return { reply: 'עדיין לא חיברת יומן, אז אני לא יודע מתי אתה פנוי.' };
 
@@ -94,7 +109,10 @@ export async function handleFreeTimeQuery(ctx: HandlerContext, intent: Intent): 
   return { reply: degraded.length ? `${body}\n\n⚠️ ${degraded.join(' ')}` : body, degraded };
 }
 
-export async function handleCreateEvent(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleCreateEvent(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const spec = intent.event;
   if (!spec?.title?.trim()) return { reply: 'מה לקבוע ביומן?' };
 
@@ -172,7 +190,10 @@ export async function handleCreateEvent(ctx: HandlerContext, intent: Intent): Pr
   }
 }
 
-export async function handleDeleteEvent(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleDeleteEvent(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const title = intent.event?.title ?? intent.task_reference;
   if (!title) return { reply: 'איזה אירוע למחוק?' };
 
@@ -181,9 +202,14 @@ export async function handleDeleteEvent(ctx: HandlerContext, intent: Intent): Pr
   const { events } = await ctx.calendar.fetchDay(ctx.user, date);
   const matches = events.filter((e) => e.title.toLowerCase().includes(title.toLowerCase()));
 
-  if (!matches.length) return { reply: `לא מצאתי אירוע בשם "${title}" ב־${describeDateHe(date, ctx.timezone, ctx.now)}.` };
+  if (!matches.length)
+    return {
+      reply: `לא מצאתי אירוע בשם "${title}" ב־${describeDateHe(date, ctx.timezone, ctx.now)}.`,
+    };
   if (matches.length > 1) {
-    const list = matches.map((e, i) => `${i + 1}. ${formatTimeOnly(e.start, ctx.timezone)} ${e.title}`).join('\n');
+    const list = matches
+      .map((e, i) => `${i + 1}. ${formatTimeOnly(e.start, ctx.timezone)} ${e.title}`)
+      .join('\n');
     return { reply: `מצאתי כמה אירועים:\n\n${list}\n\nאיזה מהם למחוק? (מספר)` };
   }
 

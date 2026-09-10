@@ -25,7 +25,14 @@ export class BriefingService {
     const [openTasks, overdue, calendarResult] = await Promise.all([
       this.tasks.listForRange(user, 'today', now, {}),
       this.tasks.listForRange(user, 'overdue', now, {}),
-      this.calendar.fetchDay(user, today).catch(() => ({ events: [], degraded: ['לא הצלחתי לקרוא את היומן.'], healthy: [], needsReauth: [] })),
+      this.calendar
+        .fetchDay(user, today)
+        .catch(() => ({
+          events: [],
+          degraded: ['לא הצלחתי לקרוא את היומן.'],
+          healthy: [],
+          needsReauth: [],
+        })),
     ]);
     const allOpen = await this.repos.tasks.list(user.id, { limit: 200 });
 
@@ -38,7 +45,8 @@ export class BriefingService {
       lines.push(`📅 ${timed.length} ${timed.length === 1 ? 'פגישה' : 'פגישות'}`);
     }
     lines.push(`✅ ${allOpen.length} ${allOpen.length === 1 ? 'משימה פתוחה' : 'משימות פתוחות'}`);
-    if (overdue.length) lines.push(`🔴 ${overdue.length} ${overdue.length === 1 ? 'משימה באיחור' : 'משימות באיחור'}`);
+    if (overdue.length)
+      lines.push(`🔴 ${overdue.length} ${overdue.length === 1 ? 'משימה באיחור' : 'משימות באיחור'}`);
 
     const focus = [...overdue, ...openTasks]
       .filter((t, i, arr) => arr.findIndex((o) => o.id === t.id) === i)
@@ -53,7 +61,12 @@ export class BriefingService {
 
     const firstMeeting = timed.find((e) => e.end > now) ?? timed[0];
     if (firstMeeting) {
-      lines.push('', 'פגישה ראשונה:', '', `${formatTimeOnly(firstMeeting.start, tz)} – ${firstMeeting.title}`);
+      lines.push(
+        '',
+        'פגישה ראשונה:',
+        '',
+        `${formatTimeOnly(firstMeeting.start, tz)} – ${firstMeeting.title}`,
+      );
     }
     if (calendarResult.degraded.length) lines.push('', `⚠️ ${calendarResult.degraded.join(' ')}`);
 
@@ -74,17 +87,22 @@ export class BriefingService {
     const tomorrow = addDaysLocal(today, 1, tz);
     const tomorrowCal = await this.calendar
       .fetchDay(user, tomorrow)
-      .catch(() => ({ events: [], degraded: ['לא הצלחתי לקרוא את היומן למחר.'], healthy: [], needsReauth: [] }));
+      .catch(() => ({
+        events: [],
+        degraded: ['לא הצלחתי לקרוא את היומן למחר.'],
+        healthy: [],
+        needsReauth: [],
+      }));
     const tomorrowMeetings = tomorrowCal.events.filter((e) => !e.allDay).length;
 
-    const lines = [
-      '🌙 סיכום היום',
-      '',
-      `בוצעו: ${completed.length}`,
-      `נשארו: ${remaining.length}`,
-    ];
+    const lines = ['🌙 סיכום היום', '', `בוצעו: ${completed.length}`, `נשארו: ${remaining.length}`];
     if (overdue.length) lines.push(`באיחור: ${overdue.length}`);
-    lines.push('', tomorrowMeetings ? `מחר יש לך ${tomorrowMeetings} ${tomorrowMeetings === 1 ? 'פגישה' : 'פגישות'}.` : 'מחר היומן פנוי.');
+    lines.push(
+      '',
+      tomorrowMeetings
+        ? `מחר יש לך ${tomorrowMeetings} ${tomorrowMeetings === 1 ? 'פגישה' : 'פגישות'}.`
+        : 'מחר היומן פנוי.',
+    );
     if (tomorrowCal.degraded.length) lines.push('', `⚠️ ${tomorrowCal.degraded.join(' ')}`);
 
     return lines.join('\n');

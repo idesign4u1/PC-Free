@@ -53,14 +53,21 @@ export function wallClockToInstant(wall: WallClock): Date {
       if (!dt.isValid) {
         const [h, m] = normalizeTime(time).split(':').map(Number);
         const bumped = DateTime.fromObject(
-          { year: Number(wall.date.slice(0, 4)), month: Number(wall.date.slice(5, 7)), day: Number(wall.date.slice(8, 10)), hour: (h ?? 0), minute: (m ?? 0) },
+          {
+            year: Number(wall.date.slice(0, 4)),
+            month: Number(wall.date.slice(5, 7)),
+            day: Number(wall.date.slice(8, 10)),
+            hour: h ?? 0,
+            minute: m ?? 0,
+          },
           { zone: wall.timezone },
         ).plus({ minutes });
         if (bumped.isValid) dt = bumped;
       }
     }
   }
-  if (!dt.isValid) throw new Error(`Cannot resolve wall clock ${iso} in ${wall.timezone}: ${dt.invalidReason}`);
+  if (!dt.isValid)
+    throw new Error(`Cannot resolve wall clock ${iso} in ${wall.timezone}: ${dt.invalidReason}`);
   return dt.toJSDate();
 }
 
@@ -98,7 +105,10 @@ export function localDayRange(date: LocalDate, timezone: string): { start: Date;
 }
 
 /** Israeli weeks run Sunday→Saturday. Luxon's weekday is 1=Mon…7=Sun. */
-export function localWeekRange(date: LocalDate, timezone: string): { start: Date; end: Date; startDate: LocalDate; endDate: LocalDate } {
+export function localWeekRange(
+  date: LocalDate,
+  timezone: string,
+): { start: Date; end: Date; startDate: LocalDate; endDate: LocalDate } {
   const dt = DateTime.fromISO(date, { zone: timezone }).startOf('day');
   const daysSinceSunday = dt.weekday % 7; // Sunday(7)→0, Monday(1)→1 …
   const start = dt.minus({ days: daysSinceSunday });
@@ -121,7 +131,12 @@ export function minutesOfDay(time: LocalTime): number {
  * Quiet hours may wrap past midnight (23:00 → 07:00). Returns true when `instant`
  * falls inside the window in the user's own timezone.
  */
-export function isWithinQuietHours(instant: Date, timezone: string, start: LocalTime, end: LocalTime): boolean {
+export function isWithinQuietHours(
+  instant: Date,
+  timezone: string,
+  start: LocalTime,
+  end: LocalTime,
+): boolean {
   const local = DateTime.fromJSDate(instant, { zone: timezone });
   const cur = local.hour * 60 + local.minute;
   const s = minutesOfDay(start);
@@ -131,7 +146,12 @@ export function isWithinQuietHours(instant: Date, timezone: string, start: Local
 }
 
 /** First instant at or after `instant` that is outside quiet hours. */
-export function nextTimeOutsideQuietHours(instant: Date, timezone: string, start: LocalTime, end: LocalTime): Date {
+export function nextTimeOutsideQuietHours(
+  instant: Date,
+  timezone: string,
+  start: LocalTime,
+  end: LocalTime,
+): Date {
   if (!isWithinQuietHours(instant, timezone, start, end)) return instant;
   const local = DateTime.fromJSDate(instant, { zone: timezone });
   const [eh, em] = normalizeTime(end).split(':').map(Number);
@@ -140,7 +160,11 @@ export function nextTimeOutsideQuietHours(instant: Date, timezone: string, start
   return candidate.toJSDate();
 }
 
-export function formatHe(instant: Date, timezone: string, opts: { withDate?: boolean } = {}): string {
+export function formatHe(
+  instant: Date,
+  timezone: string,
+  opts: { withDate?: boolean } = {},
+): string {
   const dt = DateTime.fromJSDate(instant, { zone: timezone });
   return opts.withDate ? dt.toFormat('dd/MM HH:mm') : dt.toFormat('HH:mm');
 }
@@ -164,7 +188,9 @@ export function hebrewWeekdayName(date: LocalDate, timezone: string): string {
 export function describeDateHe(date: LocalDate, timezone: string, now: Date = new Date()): string {
   const today = todayInZone(timezone, now);
   const diff = Math.round(
-    DateTime.fromISO(date, { zone: timezone }).startOf('day').diff(DateTime.fromISO(today, { zone: timezone }).startOf('day'), 'days').days,
+    DateTime.fromISO(date, { zone: timezone })
+      .startOf('day')
+      .diff(DateTime.fromISO(today, { zone: timezone }).startOf('day'), 'days').days,
   );
   if (diff === 0) return 'היום';
   if (diff === 1) return 'מחר';

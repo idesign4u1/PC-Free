@@ -37,10 +37,16 @@ const script = [
     data: {
       ...emptyIntent('CREATE_TASK', 0.92),
       task: {
-        title: 'לשלוח הצעה לאביב', description: null, priority: null, status: null,
-        project: null, client: null, tags: [],
+        title: 'לשלוח הצעה לאביב',
+        description: null,
+        priority: null,
+        status: null,
+        project: null,
+        client: null,
+        tags: [],
         due: { date: null, time: null, relative_expression: 'יום ראשון' },
-        reminder: null, recurrence: null,
+        reminder: null,
+        recurrence: null,
       },
     },
   },
@@ -49,8 +55,16 @@ const script = [
     data: {
       ...emptyIntent('SEARCH_TASKS', 0.9),
       query: {
-        range: null, date: null, end_date: null, status: null, priority: null,
-        search_text: 'אביב', project: null, client: null, contact: null, slot_minutes: null,
+        range: null,
+        date: null,
+        end_date: null,
+        status: null,
+        priority: null,
+        search_text: 'אביב',
+        project: null,
+        client: null,
+        contact: null,
+        slot_minutes: null,
       },
     },
   },
@@ -64,9 +78,16 @@ const script = [
       ...emptyIntent('UPDATE_TASK', 0.9),
       task_reference: 'המשימה של אביב',
       task: {
-        title: null, description: null, priority: null, status: null, project: null, client: null, tags: [],
+        title: null,
+        description: null,
+        priority: null,
+        status: null,
+        project: null,
+        client: null,
+        tags: [],
         due: { date: null, time: null, relative_expression: 'יום ראשון' },
-        reminder: null, recurrence: null,
+        reminder: null,
+        recurrence: null,
       },
     },
   },
@@ -103,11 +124,18 @@ beforeAll(async () => {
   sender = new FakeSender();
   app = buildApp(testEnv(), db, { sender, ai: new ScriptedAiProvider(script) });
   user = await app.repos.users.create({
-    display_name: 'Shay', whatsapp_phone: PHONE, email: 'shay@example.com', timezone: TZ,
+    display_name: 'Shay',
+    whatsapp_phone: PHONE,
+    email: 'shay@example.com',
+    timezone: TZ,
   });
 });
-afterAll(async () => { await db.close(); });
-beforeEach(() => { sender.clear(); });
+afterAll(async () => {
+  await db.close();
+});
+beforeEach(() => {
+  sender.clear();
+});
 
 describe('MVP: the full reminder round trip', () => {
   let taskId: string;
@@ -252,7 +280,11 @@ describe('ambiguity handling', () => {
     expect(reply).toContain('לבדוק קמפיין של דני');
 
     // None of the three candidates was completed while the question is open.
-    const stillOpen = await app.repos.tasks.list(user.id, { search: 'דני', limit: 50, includeSnoozed: true });
+    const stillOpen = await app.repos.tasks.list(user.id, {
+      search: 'דני',
+      limit: 50,
+      includeSnoozed: true,
+    });
     expect(stillOpen.map((t) => t.title)).toEqual(
       expect.arrayContaining(['לשלוח הצעה לדני', 'לבדוק קמפיין של דני', 'לקבוע פגישה עם דני']),
     );

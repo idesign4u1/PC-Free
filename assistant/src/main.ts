@@ -42,7 +42,8 @@ if (env.BOOTSTRAP_USER_PHONE) {
 }
 
 const missing = missingCredentials(env);
-if (missing.length) logger().warn({ missing }, 'running with reduced capability — some credentials are missing');
+if (missing.length)
+  logger().warn({ missing }, 'running with reduced capability — some credentials are missing');
 
 const server = await createServer(app);
 await server.listen({ port: env.PORT, host: env.HOST });

@@ -53,8 +53,16 @@ export function registerHealthRoutes(server: FastifyInstance, app: App): void {
           expiresAt: c.expires_at,
           lastError: c.last_error,
         })),
-        calendars: calendars.map((c) => ({ provider: c.provider, name: c.display_name, primary: c.is_primary })),
-        mailboxes: emails.map((e) => ({ provider: e.provider, address: e.address, lastScannedAt: e.last_scanned_at })),
+        calendars: calendars.map((c) => ({
+          provider: c.provider,
+          name: c.display_name,
+          primary: c.is_primary,
+        })),
+        mailboxes: emails.map((e) => ({
+          provider: e.provider,
+          address: e.address,
+          lastScannedAt: e.last_scanned_at,
+        })),
         lastInboundAt: lastInbound,
       });
     }

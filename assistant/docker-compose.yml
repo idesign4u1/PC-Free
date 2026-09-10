@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: assistant
+      POSTGRES_PASSWORD: assistant
+      POSTGRES_DB: assistant
+      TZ: Asia/Jerusalem
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U assistant -d assistant']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # Overrides .env so the container reaches Postgres by service name.
+      DATABASE_URL: postgres://assistant:assistant@db:5432/assistant
+      DATABASE_SSL: 'false'
+      HOST: 0.0.0.0
+      TZ: Asia/Jerusalem
+    ports:
+      - '3000:3000'
+
+volumes:
+  pgdata:

@@ -55,7 +55,11 @@ export class GoogleCalendarClient {
     private readonly timeoutMs = 20_000,
   ) {}
 
-  private async get<T>(connectionId: string, path: string, params: Record<string, string>): Promise<T> {
+  private async get<T>(
+    connectionId: string,
+    path: string,
+    params: Record<string, string>,
+  ): Promise<T> {
     const token = await this.tokens.accessTokenFor(connectionId);
     const url = new URL(`${BASE}${path}`);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -75,10 +79,14 @@ export class GoogleCalendarClient {
   }
 
   async listCalendars(connectionId: string): Promise<GoogleCalendarListEntry[]> {
-    const data = await this.get<{ items?: GoogleCalendarListEntry[] }>(connectionId, '/users/me/calendarList', {
-      maxResults: '100',
-      minAccessRole: 'reader',
-    });
+    const data = await this.get<{ items?: GoogleCalendarListEntry[] }>(
+      connectionId,
+      '/users/me/calendarList',
+      {
+        maxResults: '100',
+        minAccessRole: 'reader',
+      },
+    );
     return data.items ?? [];
   }
 
@@ -127,7 +135,14 @@ export class GoogleCalendarClient {
 
   async createEvent(
     account: CalendarAccount,
-    input: { title: string; start: Date; end: Date; timezone: string; description?: string; location?: string },
+    input: {
+      title: string;
+      start: Date;
+      end: Date;
+      timezone: string;
+      description?: string;
+      location?: string;
+    },
   ): Promise<UnifiedEvent> {
     const token = await this.tokens.accessTokenFor(account.oauth_connection_id);
     const res = await fetch(`${BASE}/calendars/${encodeURIComponent(account.calendar_id)}/events`, {
@@ -174,10 +189,18 @@ export class GoogleCalendarClient {
     const token = await this.tokens.accessTokenFor(account.oauth_connection_id);
     const res = await fetch(
       `${BASE}/calendars/${encodeURIComponent(account.calendar_id)}/events/${encodeURIComponent(eventId)}`,
-      { method: 'DELETE', headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(this.timeoutMs) },
+      {
+        method: 'DELETE',
+        headers: { authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(this.timeoutMs),
+      },
     );
     if (!res.ok && res.status !== 404 && res.status !== 410) {
-      throw new IntegrationError('google_calendar', `Deleting the Google event failed (${res.status})`, res.status);
+      throw new IntegrationError(
+        'google_calendar',
+        `Deleting the Google event failed (${res.status})`,
+        res.status,
+      );
     }
   }
 }

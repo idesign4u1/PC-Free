@@ -27,7 +27,10 @@ export function registerWhatsAppRoutes(server: FastifyInstance, app: App): void 
 
     if (mode === 'subscribe' && token && token === app.env.WHATSAPP_VERIFY_TOKEN) {
       logger().info('whatsapp webhook verified');
-      return reply.code(200).type('text/plain').send(challenge ?? '');
+      return reply
+        .code(200)
+        .type('text/plain')
+        .send(challenge ?? '');
     }
     logger().warn({ mode }, 'whatsapp webhook verification rejected');
     return reply.code(403).send('Forbidden');
@@ -76,7 +79,10 @@ export async function handleInbound(app: App, message: InboundMessage): Promise<
   // Unknown sender: record and ignore. This is a personal assistant, not a bot
   // anyone can talk to.
   if (!user) {
-    logger().warn({ from: hashPhone(message.from) }, 'inbound from an unregistered number — ignored');
+    logger().warn(
+      { from: hashPhone(message.from) },
+      'inbound from an unregistered number — ignored',
+    );
     await app.repos.audit.log({
       action: 'INBOUND_UNKNOWN_SENDER',
       source: 'whatsapp',
@@ -93,7 +99,11 @@ export async function handleInbound(app: App, message: InboundMessage): Promise<
     wa_from: message.from,
     message_type: message.kind,
     body: truncateForStorage(message.text),
-    payload: { rawType: message.rawType, forwarded: message.isForwarded, buttonId: message.buttonId },
+    payload: {
+      rawType: message.rawType,
+      forwarded: message.isForwarded,
+      buttonId: message.buttonId,
+    },
   });
   if (!isNew) {
     logger().debug({ waMessageId: message.waMessageId }, 'duplicate webhook delivery ignored');
@@ -115,9 +125,13 @@ export async function handleInbound(app: App, message: InboundMessage): Promise<
     }
     try {
       const media = await app.sender.downloadMedia(message.audioMediaId);
-      const transcript = await app.stt.transcribe(media.data, message.audioMimeType ?? media.mimeType, {
-        language: user.locale === 'he' ? 'he' : undefined,
-      });
+      const transcript = await app.stt.transcribe(
+        media.data,
+        message.audioMimeType ?? media.mimeType,
+        {
+          language: user.locale === 'he' ? 'he' : undefined,
+        },
+      );
       text = transcript.text;
       await app.repos.ai.log({
         user_id: user.id,
@@ -128,12 +142,19 @@ export async function handleInbound(app: App, message: InboundMessage): Promise<
         structured_output: { chars: transcript.text.length, language: transcript.language },
       });
       await app.repos.integrationLogs.log({
-        user_id: user.id, integration: 'stt', operation: 'transcribe', status: 'success',
+        user_id: user.id,
+        integration: 'stt',
+        operation: 'transcribe',
+        status: 'success',
         latency_ms: transcript.latencyMs,
       });
     } catch (err) {
       await app.repos.integrationLogs.log({
-        user_id: user.id, integration: 'stt', operation: 'transcribe', status: 'failure', error: errorText(err),
+        user_id: user.id,
+        integration: 'stt',
+        operation: 'transcribe',
+        status: 'failure',
+        error: errorText(err),
       });
       logger().error({ err: errorText(err) }, 'voice transcription failed');
       await app.messenger.send(user, 'לא הצלחתי להבין את ההקלטה. אפשר לשלוח שוב או לכתוב?');
@@ -174,7 +195,9 @@ export async function handleInbound(app: App, message: InboundMessage): Promise<
       kind: result.pendingConfirmation.kind,
       payload: result.pendingConfirmation.payload,
       prompt: result.pendingConfirmation.prompt,
-      ...(result.pendingConfirmation.ttlMinutes ? { ttlMinutes: result.pendingConfirmation.ttlMinutes } : {}),
+      ...(result.pendingConfirmation.ttlMinutes
+        ? { ttlMinutes: result.pendingConfirmation.ttlMinutes }
+        : {}),
     });
   }
   if (result.reply) {

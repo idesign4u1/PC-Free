@@ -1,8 +1,18 @@
 import type { HandlerContext, HandlerResult } from '../context.js';
 import type { Intent } from '../../ai/intent-schema.js';
 import { resolveDateSpec } from '../../ai/intent-engine.js';
-import { formatDisambiguation, formatTaskCreated, formatTaskList } from '../../whatsapp/formatter.js';
-import { addMinutes, describeDateHe, describeInstantHe, todayInZone, wallClockToInstant } from '../../utils/time.js';
+import {
+  formatDisambiguation,
+  formatTaskCreated,
+  formatTaskList,
+} from '../../whatsapp/formatter.js';
+import {
+  addMinutes,
+  describeDateHe,
+  describeInstantHe,
+  todayInZone,
+  wallClockToInstant,
+} from '../../utils/time.js';
 import { describeRecurrenceHe } from '../../tasks/recurrence.js';
 import type { Recurrence, Task } from '../../domain/types.js';
 
@@ -18,7 +28,10 @@ function toRecurrence(input: NonNullable<Intent['task']>['recurrence']): Recurre
   };
 }
 
-export async function handleCreateTask(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleCreateTask(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const spec = intent.task;
   if (!spec?.title?.trim()) {
     return { reply: 'לא הבנתי מה המשימה. אפשר לנסח שוב?' };
@@ -78,7 +91,11 @@ async function resolveTarget(
         pendingConfirmation: {
           kind: 'disambiguation',
           prompt: `בחירת משימה עבור: ${reference}`,
-          payload: { action: actionKind, candidates: match.candidates.map((t) => t.id), ...payload },
+          payload: {
+            action: actionKind,
+            candidates: match.candidates.map((t) => t.id),
+            ...payload,
+          },
         },
       },
     };
@@ -86,8 +103,16 @@ async function resolveTarget(
   return { ask: { reply: `לא מצאתי משימה שמתאימה ל"${reference}".` } };
 }
 
-export async function handleCompleteTask(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
-  const resolved = await resolveTarget(ctx, intent.task_reference ?? intent.task?.title ?? null, 'complete', {});
+export async function handleCompleteTask(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
+  const resolved = await resolveTarget(
+    ctx,
+    intent.task_reference ?? intent.task?.title ?? null,
+    'complete',
+    {},
+  );
   if ('ask' in resolved) return resolved.ask;
 
   const { task, nextTask } = await ctx.tasks.complete(ctx.user, resolved.task, ctx.settings);
@@ -102,12 +127,19 @@ export function computeSnoozeUntil(ctx: HandlerContext, intent: Intent): Date | 
   if (intent.snooze?.minutes) return addMinutes(ctx.now, intent.snooze.minutes);
   const spec = resolveDateSpec(intent.snooze?.until ?? null, ctx);
   if (spec.date) {
-    return wallClockToInstant({ date: spec.date, time: spec.time ?? '09:00', timezone: ctx.user.timezone });
+    return wallClockToInstant({
+      date: spec.date,
+      time: spec.time ?? '09:00',
+      timezone: ctx.user.timezone,
+    });
   }
   return null;
 }
 
-export async function handleSnoozeTask(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleSnoozeTask(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const resolved = await resolveTarget(ctx, intent.task_reference ?? null, 'snooze', {
     minutes: intent.snooze?.minutes ?? null,
     until: intent.snooze?.until ?? null,
@@ -124,7 +156,10 @@ export async function handleSnoozeTask(ctx: HandlerContext, intent: Intent): Pro
   };
 }
 
-export async function handleUpdateTask(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleUpdateTask(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const reference = intent.task_reference ?? intent.task?.title ?? null;
   const resolved = await resolveTarget(ctx, reference, 'update', {});
   if ('ask' in resolved) return resolved.ask;
@@ -148,7 +183,10 @@ export async function handleUpdateTask(ctx: HandlerContext, intent: Intent): Pro
       : updated.due_date
         ? describeDateHe(updated.due_date, ctx.user.timezone, ctx.now)
         : '';
-    return { reply: `📅 עדכנתי: ${updated.title}${when ? `\n${when}` : ''}`, focusTaskId: updated.id };
+    return {
+      reply: `📅 עדכנתי: ${updated.title}${when ? `\n${when}` : ''}`,
+      focusTaskId: updated.id,
+    };
   }
 
   const patch: Partial<Task> = {};
@@ -156,14 +194,18 @@ export async function handleUpdateTask(ctx: HandlerContext, intent: Intent): Pro
   if (spec?.status) patch.status = spec.status;
   if (spec?.project) patch.project = spec.project;
   if (spec?.client) patch.client = spec.client;
-  if (spec?.title && intent.task_reference && spec.title !== resolved.task.title) patch.title = spec.title;
+  if (spec?.title && intent.task_reference && spec.title !== resolved.task.title)
+    patch.title = spec.title;
   if (!Object.keys(patch).length) return { reply: 'מה לעדכן במשימה?' };
 
   const updated = await ctx.tasks.update(ctx.user, resolved.task, patch);
   return { reply: `✏️ עדכנתי: ${updated.title}`, focusTaskId: updated.id };
 }
 
-export async function handleDeleteTask(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleDeleteTask(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   // Bulk deletion is never executed straight from a natural-language sentence.
   if (intent.is_bulk) {
     const open = await ctx.repos.tasks.list(ctx.user.id, { limit: 500 });
@@ -178,7 +220,12 @@ export async function handleDeleteTask(ctx: HandlerContext, intent: Intent): Pro
     };
   }
 
-  const resolved = await resolveTarget(ctx, intent.task_reference ?? intent.task?.title ?? null, 'delete', {});
+  const resolved = await resolveTarget(
+    ctx,
+    intent.task_reference ?? intent.task?.title ?? null,
+    'delete',
+    {},
+  );
   if ('ask' in resolved) return resolved.ask;
 
   return {
@@ -198,7 +245,12 @@ export async function handleListTasks(ctx: HandlerContext, intent: Intent): Prom
   const requested = q?.range ?? 'all';
   const range = requested === 'specific_date' || requested === 'date_range' ? 'all' : requested;
 
-  const extra: { priority?: 'low' | 'normal' | 'high' | 'urgent'; project?: string; client?: string; search?: string } = {};
+  const extra: {
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    project?: string;
+    client?: string;
+    search?: string;
+  } = {};
   if (q?.priority) extra.priority = q.priority;
   if (q?.project) extra.project = q.project;
   if (q?.client) extra.client = q.client;
@@ -214,16 +266,23 @@ export async function handleListTasks(ctx: HandlerContext, intent: Intent): Prom
   }
 
   const heading =
-    range === 'overdue' ? '🔴 משימות באיחור'
-    : range === 'today' ? '📋 המשימות שלך להיום'
-    : range === 'tomorrow' ? '📋 המשימות שלך למחר'
-    : range === 'this_week' ? '📋 המשימות שלך השבוע'
-    : '📋 המשימות שלך';
+    range === 'overdue'
+      ? '🔴 משימות באיחור'
+      : range === 'today'
+        ? '📋 המשימות שלך להיום'
+        : range === 'tomorrow'
+          ? '📋 המשימות שלך למחר'
+          : range === 'this_week'
+            ? '📋 המשימות שלך השבוע'
+            : '📋 המשימות שלך';
 
   return { reply: formatTaskList(tasks, ctx.user.timezone, ctx.now, heading) };
 }
 
-export async function handleSearchTasks(ctx: HandlerContext, intent: Intent): Promise<HandlerResult> {
+export async function handleSearchTasks(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
   const q = intent.query;
   const needle = q?.search_text ?? q?.contact ?? q?.client ?? q?.project ?? intent.task_reference;
   if (!needle) return handleListTasks(ctx, intent);
@@ -244,7 +303,11 @@ export async function handleSearchTasks(ctx: HandlerContext, intent: Intent): Pr
  * be invented — the explanation is generated from the same signals that
  * produced the score.
  */
-export function scoreUrgency(task: Task, now: Date, today: string): { score: number; reason: string } {
+export function scoreUrgency(
+  task: Task,
+  now: Date,
+  today: string,
+): { score: number; reason: string } {
   const reasons: string[] = [];
   let score = 0;
 
@@ -281,7 +344,10 @@ export function scoreUrgency(task: Task, now: Date, today: string): { score: num
     reasons.push('כבר התחלת אותה');
   }
 
-  return { score, reason: reasons.length ? reasons.join(', ') : 'ללא מועד יעד — כדאי לקבוע לה זמן' };
+  return {
+    score,
+    reason: reasons.length ? reasons.join(', ') : 'ללא מועד יעד — כדאי לקבוע לה זמן',
+  };
 }
 
 export async function handlePrioritize(ctx: HandlerContext): Promise<HandlerResult> {

@@ -57,7 +57,9 @@ export const IntentSchema = z.object({
       title: z.string().nullable(),
       description: z.string().nullable(),
       priority: z.enum(['low', 'normal', 'high', 'urgent']).nullable(),
-      status: z.enum(['inbox', 'open', 'in_progress', 'waiting', 'completed', 'cancelled']).nullable(),
+      status: z
+        .enum(['inbox', 'open', 'in_progress', 'waiting', 'completed', 'cancelled'])
+        .nullable(),
       project: z.string().nullable(),
       client: z.string().nullable(),
       tags: z.array(z.string()),
@@ -92,10 +94,23 @@ export const IntentSchema = z.object({
   query: z
     .object({
       /** Local date range for calendar/task questions. */
-      range: z.enum(['today', 'tomorrow', 'this_week', 'next_week', 'overdue', 'all', 'specific_date', 'date_range']).nullable(),
+      range: z
+        .enum([
+          'today',
+          'tomorrow',
+          'this_week',
+          'next_week',
+          'overdue',
+          'all',
+          'specific_date',
+          'date_range',
+        ])
+        .nullable(),
       date: DateSpec.nullable(),
       end_date: DateSpec.nullable(),
-      status: z.enum(['inbox', 'open', 'in_progress', 'waiting', 'completed', 'cancelled']).nullable(),
+      status: z
+        .enum(['inbox', 'open', 'in_progress', 'waiting', 'completed', 'cancelled'])
+        .nullable(),
       priority: z.enum(['low', 'normal', 'high', 'urgent']).nullable(),
       search_text: z.string().nullable(),
       project: z.string().nullable(),
@@ -178,7 +193,18 @@ export const INTENT_JSON_SCHEMA: Record<string, unknown> = {
           required: ['freq', 'interval', 'byweekday', 'bymonthday'],
         },
       },
-      required: ['title', 'description', 'priority', 'status', 'project', 'client', 'tags', 'due', 'reminder', 'recurrence'],
+      required: [
+        'title',
+        'description',
+        'priority',
+        'status',
+        'project',
+        'client',
+        'tags',
+        'due',
+        'reminder',
+        'recurrence',
+      ],
     },
     task_reference: { type: ['string', 'null'] },
     event: {
@@ -199,7 +225,17 @@ export const INTENT_JSON_SCHEMA: Record<string, unknown> = {
       properties: {
         range: {
           type: ['string', 'null'],
-          enum: ['today', 'tomorrow', 'this_week', 'next_week', 'overdue', 'all', 'specific_date', 'date_range', null],
+          enum: [
+            'today',
+            'tomorrow',
+            'this_week',
+            'next_week',
+            'overdue',
+            'all',
+            'specific_date',
+            'date_range',
+            null,
+          ],
         },
         date: dateSpec(),
         end_date: dateSpec(),
@@ -214,7 +250,18 @@ export const INTENT_JSON_SCHEMA: Record<string, unknown> = {
         contact: { type: ['string', 'null'] },
         slot_minutes: { type: ['integer', 'null'], minimum: 15, maximum: 600 },
       },
-      required: ['range', 'date', 'end_date', 'status', 'priority', 'search_text', 'project', 'client', 'contact', 'slot_minutes'],
+      required: [
+        'range',
+        'date',
+        'end_date',
+        'status',
+        'priority',
+        'search_text',
+        'project',
+        'client',
+        'contact',
+        'slot_minutes',
+      ],
     },
     snooze: {
       type: ['object', 'null'],
@@ -227,7 +274,17 @@ export const INTENT_JSON_SCHEMA: Record<string, unknown> = {
     },
     is_bulk: { type: 'boolean' },
   },
-  required: ['intent', 'confidence', 'reasoning', 'task', 'task_reference', 'event', 'query', 'snooze', 'is_bulk'],
+  required: [
+    'intent',
+    'confidence',
+    'reasoning',
+    'task',
+    'task_reference',
+    'event',
+    'query',
+    'snooze',
+    'is_bulk',
+  ],
 };
 
 /** A safe, fully-populated intent used as a fallback and as a test fixture. */

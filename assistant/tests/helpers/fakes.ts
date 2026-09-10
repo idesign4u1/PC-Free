@@ -53,7 +53,8 @@ export class ScriptedAiProvider implements AiProvider {
   async generateStructured<T>(req: StructuredRequest): Promise<StructuredResponse<T>> {
     this.calls.push(req);
     const entry = this.script.find((s) => s.match.test(req.user));
-    if (!entry) throw new Error(`ScriptedAiProvider has no entry matching: ${req.user.slice(0, 120)}`);
+    if (!entry)
+      throw new Error(`ScriptedAiProvider has no entry matching: ${req.user.slice(0, 120)}`);
     return {
       data: entry.data as T,
       raw: JSON.stringify(entry.data),

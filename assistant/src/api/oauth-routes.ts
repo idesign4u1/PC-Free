@@ -63,7 +63,11 @@ h1{font-size:1.4rem}code{background:#f2f2f7;padding:.15rem .35rem;border-radius:
 export function registerOAuthRoutes(server: FastifyInstance, app: App): void {
   for (const provider of ['google', 'microsoft'] as const) {
     server.get(`/oauth/${provider}/start`, async (req: FastifyRequest, reply: FastifyReply) => {
-      if (!app.tokens) return reply.code(501).type('text/html').send(page('לא מוגדר', '<p>ENCRYPTION_KEY חסר.</p>'));
+      if (!app.tokens)
+        return reply
+          .code(501)
+          .type('text/html')
+          .send(page('לא מוגדר', '<p>ENCRYPTION_KEY חסר.</p>'));
 
       const query = req.query as { user_id?: string; phone?: string };
       const user = query.user_id
@@ -71,29 +75,50 @@ export function registerOAuthRoutes(server: FastifyInstance, app: App): void {
         : query.phone
           ? await app.repos.users.findByPhone(query.phone)
           : (await app.repos.users.listActive())[0];
-      if (!user) return reply.code(404).type('text/html').send(page('לא נמצא משתמש', '<p>אין משתמש רשום במערכת.</p>'));
+      if (!user)
+        return reply
+          .code(404)
+          .type('text/html')
+          .send(page('לא נמצא משתמש', '<p>אין משתמש רשום במערכת.</p>'));
 
       try {
         const url = app.tokens.buildAuthUrl(provider, issueState(user.id, provider));
         return reply.redirect(url);
       } catch (err) {
-        return reply.code(501).type('text/html').send(page('לא מוגדר', `<p>${errorText(err)}</p>`));
+        return reply
+          .code(501)
+          .type('text/html')
+          .send(page('לא מוגדר', `<p>${errorText(err)}</p>`));
       }
     });
 
     server.get(`/oauth/${provider}/callback`, async (req: FastifyRequest, reply: FastifyReply) => {
-      const query = req.query as { code?: string; state?: string; error?: string; error_description?: string };
+      const query = req.query as {
+        code?: string;
+        state?: string;
+        error?: string;
+        error_description?: string;
+      };
       if (query.error) {
-        return reply.code(400).type('text/html').send(page('החיבור בוטל', `<p>${query.error_description ?? query.error}</p>`));
+        return reply
+          .code(400)
+          .type('text/html')
+          .send(page('החיבור בוטל', `<p>${query.error_description ?? query.error}</p>`));
       }
       if (!query.code || !query.state) {
-        return reply.code(400).type('text/html').send(page('בקשה לא תקינה', '<p>חסר code או state.</p>'));
+        return reply
+          .code(400)
+          .type('text/html')
+          .send(page('בקשה לא תקינה', '<p>חסר code או state.</p>'));
       }
 
       const state = consumeState(query.state);
       if (!state || state.provider !== provider) {
         logger().warn({ provider }, 'oauth callback with an unknown state');
-        return reply.code(400).type('text/html').send(page('בקשה לא תקינה', '<p>ה־state לא מוכר או פג תוקף. נסה לחבר שוב.</p>'));
+        return reply
+          .code(400)
+          .type('text/html')
+          .send(page('בקשה לא תקינה', '<p>ה־state לא מוכר או פג תוקף. נסה לחבר שוב.</p>'));
       }
       if (!app.tokens) return reply.code(501).send('not configured');
 
@@ -110,10 +135,12 @@ export function registerOAuthRoutes(server: FastifyInstance, app: App): void {
         const user = await app.repos.users.findById(state.userId);
         let calendars = 0;
         if (user) {
-          calendars = await app.calendar.syncCalendarList(user, connection.id, provider).catch((err) => {
-            logger().warn({ err: errorText(err) }, 'calendar discovery failed after connect');
-            return 0;
-          });
+          calendars = await app.calendar
+            .syncCalendarList(user, connection.id, provider)
+            .catch((err) => {
+              logger().warn({ err: errorText(err) }, 'calendar discovery failed after connect');
+              return 0;
+            });
           await app.repos.emailAccounts.upsert({
             user_id: user.id,
             oauth_connection_id: connection.id,
@@ -130,15 +157,20 @@ export function registerOAuthRoutes(server: FastifyInstance, app: App): void {
           result: { provider, account: accountEmail, calendars },
         });
 
-        return reply.type('text/html').send(
-          page(
-            '✅ החיבור הושלם',
-            `<p>חיברתי את <code>${accountEmail}</code>.</p><p>נמצאו ${calendars} יומנים.</p><p>אפשר לחזור ל-WhatsApp ולשאול "מה יש לי היום?".</p>`,
-          ),
-        );
+        return reply
+          .type('text/html')
+          .send(
+            page(
+              '✅ החיבור הושלם',
+              `<p>חיברתי את <code>${accountEmail}</code>.</p><p>נמצאו ${calendars} יומנים.</p><p>אפשר לחזור ל-WhatsApp ולשאול "מה יש לי היום?".</p>`,
+            ),
+          );
       } catch (err) {
         logger().error({ provider, err: errorText(err) }, 'oauth callback failed');
-        return reply.code(500).type('text/html').send(page('החיבור נכשל', `<p>${errorText(err)}</p>`));
+        return reply
+          .code(500)
+          .type('text/html')
+          .send(page('החיבור נכשל', `<p>${errorText(err)}</p>`));
       }
     });
   }

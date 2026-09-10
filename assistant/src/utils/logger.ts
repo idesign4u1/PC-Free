@@ -32,14 +32,22 @@ export function initLogger(level: string, pretty: boolean): pino.Logger {
     base: { service: 'shay-ai-assistant' },
     timestamp: pino.stdTimeFunctions.isoTime,
     ...(pretty
-      ? { transport: { target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:HH:MM:ss' } } }
+      ? {
+          transport: {
+            target: 'pino-pretty',
+            options: { colorize: true, translateTime: 'SYS:HH:MM:ss' },
+          },
+        }
       : {}),
   });
   return root;
 }
 
 export function logger(): pino.Logger {
-  root ??= pino({ level: process.env.LOG_LEVEL ?? 'info', redact: { paths: REDACT_PATHS, censor: '[redacted]' } });
+  root ??= pino({
+    level: process.env.LOG_LEVEL ?? 'info',
+    redact: { paths: REDACT_PATHS, censor: '[redacted]' },
+  });
   return root;
 }
 

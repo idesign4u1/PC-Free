@@ -65,9 +65,14 @@ export function computeFreeSlots(events: UnifiedEvent[], opts: FreeSlotOptions):
   for (const block of busy) {
     if (block.end <= cursor) continue;
     if (block.start > cursor) {
-      const gap = Math.round((Math.min(block.start.getTime(), limit.getTime()) - cursor.getTime()) / 60_000);
+      const gap = Math.round(
+        (Math.min(block.start.getTime(), limit.getTime()) - cursor.getTime()) / 60_000,
+      );
       if (gap >= opts.minMinutes) {
-        free.push({ start: new Date(cursor), end: new Date(Math.min(block.start.getTime(), limit.getTime())) });
+        free.push({
+          start: new Date(cursor),
+          end: new Date(Math.min(block.start.getTime(), limit.getTime())),
+        });
       }
     }
     if (block.end > cursor) cursor = new Date(Math.max(cursor.getTime(), block.end.getTime()));

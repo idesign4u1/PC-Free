@@ -7,7 +7,9 @@ import { z } from 'zod';
  */
 const bool = z
   .union([z.boolean(), z.string()])
-  .transform((v) => (typeof v === 'boolean' ? v : ['1', 'true', 'yes', 'on'].includes(v.toLowerCase())));
+  .transform((v) =>
+    typeof v === 'boolean' ? v : ['1', 'true', 'yes', 'on'].includes(v.toLowerCase()),
+  );
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -79,7 +81,9 @@ let cached: Env | null = null;
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const parsed = EnvSchema.safeParse(source);
   if (!parsed.success) {
-    const issues = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
+    const issues = parsed.error.issues
+      .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
+      .join('\n');
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
   const base = parsed.data;
@@ -128,7 +132,8 @@ export function missingCredentials(e: Env = env()): string[] {
   const out: string[] = [];
   if (!caps.database) out.push('DATABASE_URL');
   if (!caps.encryption) out.push('ENCRYPTION_KEY');
-  if (!caps.whatsapp) out.push('WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ACCESS_TOKEN / META_APP_SECRET');
+  if (!caps.whatsapp)
+    out.push('WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ACCESS_TOKEN / META_APP_SECRET');
   if (!caps.ai) out.push('AI_API_KEY');
   if (!caps.google) out.push('GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
   if (!caps.microsoft) out.push('MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET');

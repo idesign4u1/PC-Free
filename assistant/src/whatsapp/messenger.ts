@@ -53,7 +53,10 @@ export class Messenger {
 
       if (!windowOpen) {
         if (!opts.template) {
-          logger().warn({ user: hashPhone(user.whatsapp_phone) }, 'outside 24h window and no template configured');
+          logger().warn(
+            { user: hashPhone(user.whatsapp_phone) },
+            'outside 24h window and no template configured',
+          );
           await this.repos.integrationLogs.log({
             user_id: user.id,
             integration: 'whatsapp',
@@ -61,7 +64,12 @@ export class Messenger {
             status: 'failure',
             error: 'customer service window closed and no template configured',
           });
-          return { sent: false, messageId: null, usedTemplate: false, skippedReason: 'window_closed_no_template' };
+          return {
+            sent: false,
+            messageId: null,
+            usedTemplate: false,
+            skippedReason: 'window_closed_no_template',
+          };
         }
         result = await this.sender.sendTemplate(
           user.whatsapp_phone,
@@ -116,7 +124,13 @@ export class Messenger {
         latency_ms: Date.now() - started,
         error: message,
       });
-      return { sent: false, messageId: null, usedTemplate: false, skippedReason: 'send_failed', error: message };
+      return {
+        sent: false,
+        messageId: null,
+        usedTemplate: false,
+        skippedReason: 'send_failed',
+        error: message,
+      };
     }
   }
 }

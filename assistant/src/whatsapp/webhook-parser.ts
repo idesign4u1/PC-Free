@@ -26,27 +26,47 @@ const Message = z.object({
       list_reply: InteractiveReply.optional(),
     })
     .optional(),
-  audio: z.object({ id: z.string(), mime_type: z.string().optional(), voice: z.boolean().optional() }).optional(),
+  audio: z
+    .object({ id: z.string(), mime_type: z.string().optional(), voice: z.boolean().optional() })
+    .optional(),
   voice: z.object({ id: z.string(), mime_type: z.string().optional() }).optional(),
   image: z.object({ id: z.string(), caption: z.string().optional() }).optional(),
-  document: z.object({ id: z.string(), filename: z.string().optional(), caption: z.string().optional() }).optional(),
+  document: z
+    .object({ id: z.string(), filename: z.string().optional(), caption: z.string().optional() })
+    .optional(),
   context: z.object({ id: z.string().optional(), forwarded: z.boolean().optional() }).optional(),
-  errors: z.array(z.object({ code: z.number().optional(), title: z.string().optional() })).optional(),
+  errors: z
+    .array(z.object({ code: z.number().optional(), title: z.string().optional() }))
+    .optional(),
 });
 
 const Status = z.object({
   id: z.string(),
   status: z.string(),
   recipient_id: z.string().optional(),
-  errors: z.array(z.object({ code: z.number().optional(), title: z.string().optional() })).optional(),
+  errors: z
+    .array(z.object({ code: z.number().optional(), title: z.string().optional() }))
+    .optional(),
 });
 
 const Change = z.object({
   field: z.string(),
   value: z.object({
     messaging_product: z.string().optional(),
-    metadata: z.object({ display_phone_number: z.string().optional(), phone_number_id: z.string().optional() }).optional(),
-    contacts: z.array(z.object({ wa_id: z.string(), profile: z.object({ name: z.string().optional() }).optional() })).optional(),
+    metadata: z
+      .object({
+        display_phone_number: z.string().optional(),
+        phone_number_id: z.string().optional(),
+      })
+      .optional(),
+    contacts: z
+      .array(
+        z.object({
+          wa_id: z.string(),
+          profile: z.object({ name: z.string().optional() }).optional(),
+        }),
+      )
+      .optional(),
     messages: z.array(Message).optional(),
     statuses: z.array(Status).optional(),
   }),
@@ -100,7 +120,9 @@ export function parseWebhook(body: unknown): ParsedWebhook {
       if (change.field !== 'messages') continue;
       const value = change.value;
       const phoneNumberId = value.metadata?.phone_number_id ?? null;
-      const nameByWaId = new Map((value.contacts ?? []).map((c) => [c.wa_id, c.profile?.name ?? null]));
+      const nameByWaId = new Map(
+        (value.contacts ?? []).map((c) => [c.wa_id, c.profile?.name ?? null]),
+      );
 
       for (const m of value.messages ?? []) {
         const audio = m.audio ?? m.voice;

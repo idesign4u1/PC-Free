@@ -15,10 +15,22 @@ const CreateTaskBody = z.object({
   title: z.string().min(1),
   description: z.string().nullish(),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).nullish(),
-  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(),
-  due_time: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
-  reminder_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(),
-  reminder_time: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
+  due_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullish(),
+  due_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullish(),
+  reminder_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullish(),
+  reminder_time: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullish(),
   project: z.string().nullish(),
   client: z.string().nullish(),
   tags: z.array(z.string()).optional(),
@@ -37,7 +49,7 @@ export function registerTaskRoutes(server: FastifyInstance, app: App): void {
   };
 
   const resolveUser = async (userId?: string) =>
-    userId ? app.repos.users.findById(userId) : (await app.repos.users.listActive())[0] ?? null;
+    userId ? app.repos.users.findById(userId) : ((await app.repos.users.listActive())[0] ?? null);
 
   server.get('/api/tasks', async (req, reply) => {
     if (!(await guard(req, reply))) return reply;
@@ -57,7 +69,8 @@ export function registerTaskRoutes(server: FastifyInstance, app: App): void {
   server.post('/api/tasks', async (req, reply) => {
     if (!(await guard(req, reply))) return reply;
     const parsed = CreateTaskBody.safeParse(req.body);
-    if (!parsed.success) return reply.code(400).send({ error: 'invalid body', issues: parsed.error.issues });
+    if (!parsed.success)
+      return reply.code(400).send({ error: 'invalid body', issues: parsed.error.issues });
 
     const user = await resolveUser((req.query as { user_id?: string }).user_id);
     if (!user) return reply.code(404).send({ error: 'no user' });
@@ -74,7 +87,9 @@ export function registerTaskRoutes(server: FastifyInstance, app: App): void {
         client: body.client ?? null,
         tags: body.tags ?? [],
         due: body.due_date ? { date: body.due_date, time: body.due_time ?? null } : null,
-        reminder: body.reminder_date ? { date: body.reminder_date, time: body.reminder_time ?? null } : null,
+        reminder: body.reminder_date
+          ? { date: body.reminder_date, time: body.reminder_time ?? null }
+          : null,
         source: 'api',
       },
       settings,
@@ -101,7 +116,8 @@ export function registerTaskRoutes(server: FastifyInstance, app: App): void {
   server.post('/api/message', async (req, reply) => {
     if (!(await guard(req, reply))) return reply;
     const parsed = MessageBody.safeParse(req.body);
-    if (!parsed.success) return reply.code(400).send({ error: 'invalid body', issues: parsed.error.issues });
+    if (!parsed.success)
+      return reply.code(400).send({ error: 'invalid body', issues: parsed.error.issues });
 
     const user = await resolveUser(parsed.data.user_id);
     if (!user) return reply.code(404).send({ error: 'no user' });
@@ -109,12 +125,21 @@ export function registerTaskRoutes(server: FastifyInstance, app: App): void {
     const now = new Date();
 
     const ctx: HandlerContext = {
-      repos: app.repos, tasks: app.tasks, calendar: app.calendar, messenger: app.messenger,
-      ai: app.ai, user, settings, now, timezone: user.timezone, source: 'api',
+      repos: app.repos,
+      tasks: app.tasks,
+      calendar: app.calendar,
+      messenger: app.messenger,
+      ai: app.ai,
+      user,
+      settings,
+      now,
+      timezone: user.timezone,
+      source: 'api',
     };
     const result = await app.router.route(ctx, { text: parsed.data.text });
 
-    if (result.focusTaskId !== undefined) await app.repos.conversation.setLastTask(user.id, result.focusTaskId);
+    if (result.focusTaskId !== undefined)
+      await app.repos.conversation.setLastTask(user.id, result.focusTaskId);
     if (result.pendingConfirmation) {
       await app.repos.confirmations.create({
         user_id: user.id,

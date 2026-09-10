@@ -1,5 +1,13 @@
 import type { Repositories } from '../db/repositories.js';
-import type { Recurrence, Settings, Task, TaskPriority, TaskSource, TaskStatus, User } from '../domain/types.js';
+import type {
+  Recurrence,
+  Settings,
+  Task,
+  TaskPriority,
+  TaskSource,
+  TaskStatus,
+  User,
+} from '../domain/types.js';
 import { OPEN_STATUSES } from '../domain/types.js';
 import {
   addMinutes,
@@ -56,7 +64,9 @@ export class TaskService {
     const tz = req.user.timezone;
     const dueDate = req.due?.date ?? null;
     const dueTime = req.due?.time ?? null;
-    const dueAt = dueDate ? wallClockToInstant({ date: dueDate, time: dueTime, timezone: tz }) : null;
+    const dueAt = dueDate
+      ? wallClockToInstant({ date: dueDate, time: dueTime, timezone: tz })
+      : null;
 
     // A reminder defaults to the due moment when a time was given, so
     // "עד יום ראשון ב-18:00" still pings without the user asking twice.
@@ -75,9 +85,17 @@ export class TaskService {
     }
 
     let deferredFrom: Date | null = null;
-    if (reminderAt && isWithinQuietHours(reminderAt, tz, settings.quiet_hours_start, settings.quiet_hours_end)) {
+    if (
+      reminderAt &&
+      isWithinQuietHours(reminderAt, tz, settings.quiet_hours_start, settings.quiet_hours_end)
+    ) {
       deferredFrom = reminderAt;
-      reminderAt = nextTimeOutsideQuietHours(reminderAt, tz, settings.quiet_hours_start, settings.quiet_hours_end);
+      reminderAt = nextTimeOutsideQuietHours(
+        reminderAt,
+        tz,
+        settings.quiet_hours_start,
+        settings.quiet_hours_end,
+      );
     }
 
     const task = await this.repos.tasks.create({
@@ -104,7 +122,11 @@ export class TaskService {
     });
 
     if (reminderAt) {
-      await this.repos.reminders.create({ task_id: task.id, user_id: req.user.id, remind_at: reminderAt });
+      await this.repos.reminders.create({
+        task_id: task.id,
+        user_id: req.user.id,
+        remind_at: reminderAt,
+      });
     }
     await this.repos.tasks.addEvent(req.user.id, task.id, 'created', { source: req.source });
     await this.repos.audit.log({
@@ -124,7 +146,10 @@ export class TaskService {
   async reschedule(
     user: User,
     task: Task,
-    changes: { due?: { date: LocalDate | null; time: string | null } | null; reminder?: { date: LocalDate | null; time: string | null } | null },
+    changes: {
+      due?: { date: LocalDate | null; time: string | null } | null;
+      reminder?: { date: LocalDate | null; time: string | null } | null;
+    },
     settings: Settings,
   ): Promise<Task> {
     const tz = task.timezone || user.timezone;
@@ -142,9 +167,18 @@ export class TaskService {
       await this.repos.reminders.cancelPendingForTask(task.id);
       const d = changes.reminder?.date ?? null;
       if (d) {
-        let at = wallClockToInstant({ date: d, time: changes.reminder?.time ?? '09:00', timezone: tz });
+        let at = wallClockToInstant({
+          date: d,
+          time: changes.reminder?.time ?? '09:00',
+          timezone: tz,
+        });
         if (isWithinQuietHours(at, tz, settings.quiet_hours_start, settings.quiet_hours_end)) {
-          at = nextTimeOutsideQuietHours(at, tz, settings.quiet_hours_start, settings.quiet_hours_end);
+          at = nextTimeOutsideQuietHours(
+            at,
+            tz,
+            settings.quiet_hours_start,
+            settings.quiet_hours_end,
+          );
         }
         patch.reminder_at = at;
         await this.repos.reminders.create({ task_id: task.id, user_id: user.id, remind_at: at });
@@ -156,7 +190,12 @@ export class TaskService {
       await this.repos.reminders.cancelPendingForTask(task.id);
       let at = patch.due_at;
       if (isWithinQuietHours(at, tz, settings.quiet_hours_start, settings.quiet_hours_end)) {
-        at = nextTimeOutsideQuietHours(at, tz, settings.quiet_hours_start, settings.quiet_hours_end);
+        at = nextTimeOutsideQuietHours(
+          at,
+          tz,
+          settings.quiet_hours_start,
+          settings.quiet_hours_end,
+        );
       }
       patch.reminder_at = at;
       await this.repos.reminders.create({ task_id: task.id, user_id: user.id, remind_at: at });
@@ -182,8 +221,12 @@ export class TaskService {
     const updated = (await this.repos.tasks.update(user.id, task.id, patch)) ?? task;
     await this.repos.tasks.addEvent(user.id, task.id, 'updated', patch as Record<string, unknown>);
     await this.repos.audit.log({
-      user_id: user.id, action: 'UPDATE_TASK', entity_type: 'task', entity_id: task.id,
-      input: patch as Record<string, unknown>, result: { id: task.id },
+      user_id: user.id,
+      action: 'UPDATE_TASK',
+      entity_type: 'task',
+      entity_id: task.id,
+      input: patch as Record<string, unknown>,
+      result: { id: task.id },
     });
     return updated;
   }
@@ -192,13 +235,23 @@ export class TaskService {
    * Completes a task. A recurring task spawns its next occurrence rather than
    * disappearing.
    */
-  async complete(user: User, task: Task, settings: Settings): Promise<{ task: Task; nextTask: Task | null }> {
+  async complete(
+    user: User,
+    task: Task,
+    settings: Settings,
+  ): Promise<{ task: Task; nextTask: Task | null }> {
     await this.repos.reminders.cancelPendingForTask(task.id);
     const updated =
-      (await this.repos.tasks.update(user.id, task.id, { status: 'completed', completed_at: new Date() })) ?? task;
+      (await this.repos.tasks.update(user.id, task.id, {
+        status: 'completed',
+        completed_at: new Date(),
+      })) ?? task;
     await this.repos.tasks.addEvent(user.id, task.id, 'completed', {});
     await this.repos.audit.log({
-      user_id: user.id, action: 'COMPLETE_TASK', entity_type: 'task', entity_id: task.id,
+      user_id: user.id,
+      action: 'COMPLETE_TASK',
+      entity_type: 'task',
+      entity_id: task.id,
       result: { title: task.title },
     });
 
@@ -226,8 +279,9 @@ export class TaskService {
           },
           settings,
         );
-        nextTask = created.task;
-        await this.repos.tasks.update(user.id, created.task.id, { parent_task_id: task.id });
+        nextTask =
+          (await this.repos.tasks.update(user.id, created.task.id, { parent_task_id: task.id })) ??
+          created.task;
       }
     }
     return { task: updated, nextTask };
@@ -235,16 +289,27 @@ export class TaskService {
 
   async snooze(user: User, task: Task, until: Date, settings: Settings): Promise<Task> {
     let at = until;
-    if (isWithinQuietHours(at, task.timezone, settings.quiet_hours_start, settings.quiet_hours_end)) {
-      at = nextTimeOutsideQuietHours(at, task.timezone, settings.quiet_hours_start, settings.quiet_hours_end);
+    if (
+      isWithinQuietHours(at, task.timezone, settings.quiet_hours_start, settings.quiet_hours_end)
+    ) {
+      at = nextTimeOutsideQuietHours(
+        at,
+        task.timezone,
+        settings.quiet_hours_start,
+        settings.quiet_hours_end,
+      );
     }
     await this.repos.reminders.cancelPendingForTask(task.id);
     await this.repos.reminders.create({ task_id: task.id, user_id: user.id, remind_at: at });
     const updated =
-      (await this.repos.tasks.update(user.id, task.id, { snoozed_until: at, reminder_at: at })) ?? task;
+      (await this.repos.tasks.update(user.id, task.id, { snoozed_until: at, reminder_at: at })) ??
+      task;
     await this.repos.tasks.addEvent(user.id, task.id, 'snoozed', { until: at.toISOString() });
     await this.repos.audit.log({
-      user_id: user.id, action: 'SNOOZE_TASK', entity_type: 'task', entity_id: task.id,
+      user_id: user.id,
+      action: 'SNOOZE_TASK',
+      entity_type: 'task',
+      entity_id: task.id,
       result: { until: at.toISOString() },
     });
     return updated;
@@ -252,10 +317,14 @@ export class TaskService {
 
   async cancel(user: User, task: Task): Promise<Task> {
     await this.repos.reminders.cancelPendingForTask(task.id);
-    const updated = (await this.repos.tasks.update(user.id, task.id, { status: 'cancelled' })) ?? task;
+    const updated =
+      (await this.repos.tasks.update(user.id, task.id, { status: 'cancelled' })) ?? task;
     await this.repos.tasks.addEvent(user.id, task.id, 'cancelled', {});
     await this.repos.audit.log({
-      user_id: user.id, action: 'CANCEL_TASK', entity_type: 'task', entity_id: task.id,
+      user_id: user.id,
+      action: 'CANCEL_TASK',
+      entity_type: 'task',
+      entity_id: task.id,
     });
     return updated;
   }
@@ -263,14 +332,22 @@ export class TaskService {
   async remove(user: User, task: Task): Promise<boolean> {
     const ok = await this.repos.tasks.delete(user.id, task.id);
     await this.repos.audit.log({
-      user_id: user.id, action: 'DELETE_TASK', entity_type: 'task', entity_id: task.id,
-      result: { deleted: ok, title: task.title }, status: ok ? 'success' : 'failure',
+      user_id: user.id,
+      action: 'DELETE_TASK',
+      entity_type: 'task',
+      entity_id: task.id,
+      result: { deleted: ok, title: task.title },
+      status: ok ? 'success' : 'failure',
     });
     return ok;
   }
 
   /** Resolves a free-text reference against the user's open tasks. */
-  async resolveReference(user: User, reference: string, opts: { includeCompleted?: boolean } = {}): Promise<MatchResult> {
+  async resolveReference(
+    user: User,
+    reference: string,
+    opts: { includeCompleted?: boolean } = {},
+  ): Promise<MatchResult> {
     const tasks = await this.repos.tasks.list(user.id, {
       statuses: opts.includeCompleted ? [...OPEN_STATUSES, 'completed'] : OPEN_STATUSES,
       limit: 200,
@@ -296,7 +373,10 @@ export class TaskService {
       }
       case 'tomorrow': {
         const { start, end } = localDayRange(
-          instantToWallClock(addMinutes(wallClockToInstant({ date: today, time: '12:00', timezone: tz }), 1440), tz).date,
+          instantToWallClock(
+            addMinutes(wallClockToInstant({ date: today, time: '12:00', timezone: tz }), 1440),
+            tz,
+          ).date,
           tz,
         );
         return this.repos.tasks.list(user.id, { ...base, dueAfter: start, dueBefore: end });

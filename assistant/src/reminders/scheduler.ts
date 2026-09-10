@@ -97,14 +97,22 @@ export class Scheduler {
         if (!settings.daily_briefing_enabled) return;
         const body = await this.briefing.buildDailyBriefing(user, settings, now);
         await this.messenger.send(user, body);
-        await this.repos.audit.log({ user_id: user.id, action: 'SEND_DAILY_BRIEFING', source: 'scheduler' });
+        await this.repos.audit.log({
+          user_id: user.id,
+          action: 'SEND_DAILY_BRIEFING',
+          source: 'scheduler',
+        });
         return;
       }
       case 'eod_summary': {
         if (!settings.eod_summary_enabled) return;
         const body = await this.briefing.buildEndOfDay(user, now);
         await this.messenger.send(user, body);
-        await this.repos.audit.log({ user_id: user.id, action: 'SEND_EOD_SUMMARY', source: 'scheduler' });
+        await this.repos.audit.log({
+          user_id: user.id,
+          action: 'SEND_EOD_SUMMARY',
+          source: 'scheduler',
+        });
         return;
       }
       case 'email_scan': {
@@ -128,21 +136,27 @@ export class Scheduler {
    * exactly the "don't nag me" failure the spec warns about.
    */
   private async proposeCandidates(user: User, settings: Settings, now: Date): Promise<void> {
-    if (isWithinQuietHours(now, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end)) return;
+    if (
+      isWithinQuietHours(now, user.timezone, settings.quiet_hours_start, settings.quiet_hours_end)
+    )
+      return;
 
     const existing = await this.repos.confirmations.findPending(user.id);
     if (existing) return; // don't stack questions
 
     const candidate = await this.repos.email.latestPendingCandidate(user.id);
     if (!candidate) return;
-    if (candidate.status === 'snoozed' && candidate.snoozed_until && candidate.snoozed_until > now) return;
+    if (candidate.status === 'snoozed' && candidate.snoozed_until && candidate.snoozed_until > now)
+      return;
 
     const dueLine = candidate.due_date
       ? `\n\nעד ${describeDateHe(candidate.due_date, user.timezone, now)}`
       : '';
     const body = `📧 זיהיתי משימה חדשה במייל:\n\n${candidate.title}${dueLine}\n\nלהוסיף למשימות?`;
 
-    const result = await this.messenger.send(user, body, { buttons: candidateButtons(candidate.id) });
+    const result = await this.messenger.send(user, body, {
+      buttons: candidateButtons(candidate.id),
+    });
     if (!result.sent) return;
 
     await this.repos.confirmations.create({
@@ -182,7 +196,12 @@ export class Scheduler {
     }
   }
 
-  private async armDailyJob(user: User, jobType: string, timeOfDay: string, local: DateTime): Promise<void> {
+  private async armDailyJob(
+    user: User,
+    jobType: string,
+    timeOfDay: string,
+    local: DateTime,
+  ): Promise<void> {
     const [h, m] = timeOfDay.split(':').map(Number);
     let target = local.set({ hour: h ?? 7, minute: m ?? 30, second: 0, millisecond: 0 });
     if (target <= local) target = target.plus({ days: 1 });

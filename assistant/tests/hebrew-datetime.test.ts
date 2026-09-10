@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { parseHebrewDateTime, stripDateExpression, stripLeadPhrases } from '../src/nlp/hebrew-datetime.js';
-import { wallClockToInstant, instantToWallClock, isWithinQuietHours, nextTimeOutsideQuietHours, localWeekRange } from '../src/utils/time.js';
+import {
+  parseHebrewDateTime,
+  stripDateExpression,
+  stripLeadPhrases,
+} from '../src/nlp/hebrew-datetime.js';
+import {
+  wallClockToInstant,
+  instantToWallClock,
+  isWithinQuietHours,
+  nextTimeOutsideQuietHours,
+  localWeekRange,
+} from '../src/utils/time.js';
 
 const TZ = 'Asia/Jerusalem';
 // Wednesday 2026-09-09 14:00 local (IDT, UTC+3) => 11:00Z
@@ -155,7 +165,11 @@ describe('timezone and DST', () => {
   it('round-trips a wall clock through UTC', () => {
     const instant = wallClockToInstant({ date: '2026-09-10', time: '10:00', timezone: TZ });
     expect(instant.toISOString()).toBe('2026-09-10T07:00:00.000Z'); // IDT = UTC+3
-    expect(instantToWallClock(instant, TZ)).toEqual({ date: '2026-09-10', time: '10:00', timezone: TZ });
+    expect(instantToWallClock(instant, TZ)).toEqual({
+      date: '2026-09-10',
+      time: '10:00',
+      timezone: TZ,
+    });
   });
 
   it('uses winter offset after the autumn DST change', () => {
@@ -206,6 +220,6 @@ describe('Israeli week', () => {
   it('runs Sunday to Saturday', () => {
     const range = localWeekRange('2026-09-09', TZ); // Wednesday
     expect(range.startDate).toBe('2026-09-06'); // Sunday
-    expect(range.endDate).toBe('2026-09-12');   // Saturday
+    expect(range.endDate).toBe('2026-09-12'); // Saturday
   });
 });

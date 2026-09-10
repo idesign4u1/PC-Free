@@ -48,7 +48,11 @@ export function mergeCalendars(groups: UnifiedEvent[][]): MergedEvent[] {
     const existing = (uidKey ? byUid.get(uidKey) : undefined) ?? byFuzzy.get(fzKey);
 
     if (existing) {
-      if (!existing.sources.some((s) => s.provider === event.provider && s.calendarName === event.calendarName)) {
+      if (
+        !existing.sources.some(
+          (s) => s.provider === event.provider && s.calendarName === event.calendarName,
+        )
+      ) {
         existing.sources.push({ provider: event.provider, calendarName: event.calendarName });
       }
       // Prefer a title that is not empty, and a link if we did not have one.
@@ -66,5 +70,7 @@ export function mergeCalendars(groups: UnifiedEvent[][]): MergedEvent[] {
     out.push(merged);
   }
 
-  return out.sort((a, b) => a.start.getTime() - b.start.getTime() || a.title.localeCompare(b.title));
+  return out.sort(
+    (a, b) => a.start.getTime() - b.start.getTime() || a.title.localeCompare(b.title),
+  );
 }

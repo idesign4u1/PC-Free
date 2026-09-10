@@ -9,7 +9,10 @@ export interface QueryResult<R> {
 }
 
 export interface Db {
-  query<R = Record<string, unknown>>(sql: string, params?: readonly unknown[]): Promise<QueryResult<R>>;
+  query<R = Record<string, unknown>>(
+    sql: string,
+    params?: readonly unknown[],
+  ): Promise<QueryResult<R>>;
   /** Runs `fn` inside a transaction, rolling back on throw. */
   transaction<T>(fn: (tx: Db) => Promise<T>): Promise<T>;
   close(): Promise<void>;

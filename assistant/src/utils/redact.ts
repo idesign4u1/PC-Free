@@ -15,7 +15,10 @@ export function truncateForStorage(text: string | null | undefined, max = 500): 
  * Email content is never logged verbatim. This keeps the subject line (business
  * context) and drops the body entirely.
  */
-export function emailLogSummary(input: { from?: string | null; subject?: string | null }): Record<string, string> {
+export function emailLogSummary(input: {
+  from?: string | null;
+  subject?: string | null;
+}): Record<string, string> {
   return {
     from: input.from ? maskEmail(input.from) : 'unknown',
     subject: truncateForStorage(input.subject, 120) ?? '(no subject)',

@@ -47,7 +47,8 @@ export interface GraphCalendar {
 
 function parseGraphDate(value: GraphDateTime | undefined, fallbackZone: string): Date {
   if (!value?.dateTime) return new Date(NaN);
-  const zone = value.timeZone && value.timeZone !== 'tzone://Microsoft/Custom' ? value.timeZone : fallbackZone;
+  const zone =
+    value.timeZone && value.timeZone !== 'tzone://Microsoft/Custom' ? value.timeZone : fallbackZone;
   // Graph emits ISO without an offset; the offset lives in `timeZone`.
   const dt = DateTime.fromISO(value.dateTime, { zone: zone === 'UTC' ? 'utc' : zone });
   return dt.isValid ? dt.toJSDate() : new Date(value.dateTime);
@@ -59,7 +60,11 @@ export class MicrosoftCalendarClient {
     private readonly timeoutMs = 20_000,
   ) {}
 
-  private async get<T>(connectionId: string, path: string, params: Record<string, string> = {}): Promise<T> {
+  private async get<T>(
+    connectionId: string,
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<T> {
     const token = await this.tokens.accessTokenFor(connectionId);
     const url = new URL(`${BASE}${path}`);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -83,11 +88,16 @@ export class MicrosoftCalendarClient {
   }
 
   async listCalendars(connectionId: string): Promise<GraphCalendar[]> {
-    const data = await this.get<{ value?: GraphCalendar[] }>(connectionId, '/me/calendars', { $top: '100' });
+    const data = await this.get<{ value?: GraphCalendar[] }>(connectionId, '/me/calendars', {
+      $top: '100',
+    });
     return data.value ?? [];
   }
 
-  async listEvents(account: CalendarAccount, range: { start: Date; end: Date }): Promise<UnifiedEvent[]> {
+  async listEvents(
+    account: CalendarAccount,
+    range: { start: Date; end: Date },
+  ): Promise<UnifiedEvent[]> {
     const path = account.is_primary
       ? '/me/calendarView'
       : `/me/calendars/${encodeURIComponent(account.calendar_id)}/calendarView`;
@@ -96,7 +106,8 @@ export class MicrosoftCalendarClient {
       endDateTime: range.end.toISOString(),
       $orderby: 'start/dateTime',
       $top: '250',
-      $select: 'id,iCalUId,subject,start,end,isAllDay,isCancelled,showAs,webLink,location,organizer,attendees',
+      $select:
+        'id,iCalUId,subject,start,end,isAllDay,isCancelled,showAs,webLink,location,organizer,attendees',
     });
 
     return (data.value ?? [])
@@ -123,7 +134,14 @@ export class MicrosoftCalendarClient {
 
   async createEvent(
     account: CalendarAccount,
-    input: { title: string; start: Date; end: Date; timezone: string; description?: string; location?: string },
+    input: {
+      title: string;
+      start: Date;
+      end: Date;
+      timezone: string;
+      description?: string;
+      location?: string;
+    },
   ): Promise<UnifiedEvent> {
     const token = await this.tokens.accessTokenFor(account.oauth_connection_id);
     const path = account.is_primary
@@ -136,8 +154,14 @@ export class MicrosoftCalendarClient {
         subject: input.title,
         body: input.description ? { contentType: 'text', content: input.description } : undefined,
         location: input.location ? { displayName: input.location } : undefined,
-        start: { dateTime: DateTime.fromJSDate(input.start).toUTC().toISO({ includeOffset: false }), timeZone: 'UTC' },
-        end: { dateTime: DateTime.fromJSDate(input.end).toUTC().toISO({ includeOffset: false }), timeZone: 'UTC' },
+        start: {
+          dateTime: DateTime.fromJSDate(input.start).toUTC().toISO({ includeOffset: false }),
+          timeZone: 'UTC',
+        },
+        end: {
+          dateTime: DateTime.fromJSDate(input.end).toUTC().toISO({ includeOffset: false }),
+          timeZone: 'UTC',
+        },
       }),
       signal: AbortSignal.timeout(this.timeoutMs),
     });
@@ -177,7 +201,11 @@ export class MicrosoftCalendarClient {
       signal: AbortSignal.timeout(this.timeoutMs),
     });
     if (!res.ok && res.status !== 404) {
-      throw new IntegrationError('outlook_calendar', `Deleting the Outlook event failed (${res.status})`, res.status);
+      throw new IntegrationError(
+        'outlook_calendar',
+        `Deleting the Outlook event failed (${res.status})`,
+        res.status,
+      );
     }
   }
 }

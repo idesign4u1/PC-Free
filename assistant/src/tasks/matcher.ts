@@ -16,8 +16,31 @@ export interface MatchResult {
 }
 
 const STOPWORDS = new Set([
-  'את', 'של', 'עם', 'על', 'לגבי', 'המשימה', 'משימה', 'ה', 'לי', 'זה', 'הזאת', 'הזה',
-  'ל', 'מ', 'ב', 'ו', 'כל', 'אני', 'צריך', 'the', 'to', 'a', 'for', 'my', 'task',
+  'את',
+  'של',
+  'עם',
+  'על',
+  'לגבי',
+  'המשימה',
+  'משימה',
+  'ה',
+  'לי',
+  'זה',
+  'הזאת',
+  'הזה',
+  'ל',
+  'מ',
+  'ב',
+  'ו',
+  'כל',
+  'אני',
+  'צריך',
+  'the',
+  'to',
+  'a',
+  'for',
+  'my',
+  'task',
 ]);
 
 export function tokenize(text: string): string[] {
@@ -46,7 +69,13 @@ export function scoreTask(reference: string, task: Task): number {
   const refTokens = tokenize(reference);
   if (!refTokens.length) return 0;
   const haystack = tokenize(
-    [task.title, task.description ?? '', task.project ?? '', task.client ?? '', task.tags.join(' ')].join(' '),
+    [
+      task.title,
+      task.description ?? '',
+      task.project ?? '',
+      task.client ?? '',
+      task.tags.join(' '),
+    ].join(' '),
   );
   if (!haystack.length) return 0;
 
@@ -79,13 +108,19 @@ export function matchTask(
   const scored = tasks
     .map((task) => ({ task, score: scoreTask(reference, task) }))
     .filter((s) => s.score >= minScore)
-    .sort((a, b) => b.score - a.score || (a.task.due_at?.getTime() ?? Infinity) - (b.task.due_at?.getTime() ?? Infinity));
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        (a.task.due_at?.getTime() ?? Infinity) - (b.task.due_at?.getTime() ?? Infinity),
+    );
 
   if (!scored.length) return { best: null, candidates: [], isAmbiguous: false, score: 0 };
 
   const top = scored[0]!;
   const runnerUp = scored[1];
-  const ambiguous = Boolean(runnerUp && top.score - runnerUp.score < margin);
+  // Epsilon guard: scores are sums of floats, so an intended gap of exactly
+  // `margin` can compute as 0.19999999999999996 and read as ambiguous.
+  const ambiguous = Boolean(runnerUp && top.score - runnerUp.score < margin - 1e-9);
 
   return {
     best: ambiguous ? null : top.task,

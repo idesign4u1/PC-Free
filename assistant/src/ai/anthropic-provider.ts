@@ -18,7 +18,11 @@ export class AnthropicProvider implements AiProvider {
   constructor(
     apiKey: string,
     readonly model: string,
-    private readonly defaults: { maxTokens: number; effort: StructuredRequest['effort']; timeoutMs: number },
+    private readonly defaults: {
+      maxTokens: number;
+      effort: StructuredRequest['effort'];
+      timeoutMs: number;
+    },
   ) {
     if (!apiKey) throw new AiUnavailableError('AI_API_KEY is not configured');
     this.client = new Anthropic({ apiKey, timeout: defaults.timeoutMs, maxRetries: 2 });
@@ -26,7 +30,9 @@ export class AnthropicProvider implements AiProvider {
 
   async generateStructured<T>(req: StructuredRequest): Promise<StructuredResponse<T>> {
     const started = Date.now();
-    const untrusted = (req.untrusted ?? []).map((u) => wrapUntrusted(u.label, u.content)).join('\n\n');
+    const untrusted = (req.untrusted ?? [])
+      .map((u) => wrapUntrusted(u.label, u.content))
+      .join('\n\n');
     const system = untrusted ? `${req.system}\n\n${UNTRUSTED_PREAMBLE}` : req.system;
     const user = untrusted ? `${req.user}\n\n${untrusted}` : req.user;
 
@@ -44,7 +50,9 @@ export class AnthropicProvider implements AiProvider {
       });
     } catch (err) {
       throw new AiUnavailableError(
-        err instanceof Anthropic.APIError ? `Anthropic API error ${err.status}: ${err.message}` : String(err),
+        err instanceof Anthropic.APIError
+          ? `Anthropic API error ${err.status}: ${err.message}`
+          : String(err),
       );
     }
 
@@ -88,7 +96,11 @@ export class AnthropicProvider implements AiProvider {
     };
   }
 
-  async generateText(input: { system: string; user: string; maxTokens?: number }): Promise<{ text: string; latencyMs: number }> {
+  async generateText(input: {
+    system: string;
+    user: string;
+    maxTokens?: number;
+  }): Promise<{ text: string; latencyMs: number }> {
     const started = Date.now();
     const response = await this.client.messages.create({
       model: this.model,

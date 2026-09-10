@@ -27,7 +27,9 @@ export class OpenAiProvider implements AiProvider {
 
   async generateStructured<T>(req: StructuredRequest): Promise<StructuredResponse<T>> {
     const started = Date.now();
-    const untrusted = (req.untrusted ?? []).map((u) => wrapUntrusted(u.label, u.content)).join('\n\n');
+    const untrusted = (req.untrusted ?? [])
+      .map((u) => wrapUntrusted(u.label, u.content))
+      .join('\n\n');
     const system = untrusted ? `${req.system}\n\n${UNTRUSTED_PREAMBLE}` : req.system;
     const user = untrusted ? `${req.user}\n\n${untrusted}` : req.user;
 
@@ -50,7 +52,9 @@ export class OpenAiProvider implements AiProvider {
     });
 
     if (!res.ok) {
-      throw new AiUnavailableError(`OpenAI API error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+      throw new AiUnavailableError(
+        `OpenAI API error ${res.status}: ${(await res.text()).slice(0, 300)}`,
+      );
     }
     const body = (await res.json()) as ChatCompletion;
     const text = body.choices[0]?.message.content ?? '';

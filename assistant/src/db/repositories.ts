@@ -31,7 +31,9 @@ export class UserRepo {
   constructor(private readonly db: Db) {}
 
   async findByPhone(phone: string): Promise<User | null> {
-    const { rows } = await this.db.query<User>('SELECT * FROM users WHERE whatsapp_phone = $1', [phone]);
+    const { rows } = await this.db.query<User>('SELECT * FROM users WHERE whatsapp_phone = $1', [
+      phone,
+    ]);
     return rows[0] ?? null;
   }
 
@@ -41,11 +43,18 @@ export class UserRepo {
   }
 
   async listActive(): Promise<User[]> {
-    const { rows } = await this.db.query<User>('SELECT * FROM users WHERE is_active = TRUE ORDER BY created_at');
+    const { rows } = await this.db.query<User>(
+      'SELECT * FROM users WHERE is_active = TRUE ORDER BY created_at',
+    );
     return rows;
   }
 
-  async create(input: { display_name: string; whatsapp_phone: string; email?: string | null; timezone: string }): Promise<User> {
+  async create(input: {
+    display_name: string;
+    whatsapp_phone: string;
+    email?: string | null;
+    timezone: string;
+  }): Promise<User> {
     const id = newId();
     const { rows } = await this.db.query<User>(
       `INSERT INTO users (id, display_name, whatsapp_phone, email, timezone)
@@ -61,9 +70,14 @@ export class SettingsRepo {
   constructor(private readonly db: Db) {}
 
   async get(userId: string): Promise<Settings> {
-    const { rows } = await this.db.query<Settings>('SELECT * FROM settings WHERE user_id = $1', [userId]);
+    const { rows } = await this.db.query<Settings>('SELECT * FROM settings WHERE user_id = $1', [
+      userId,
+    ]);
     if (rows[0]) return rows[0];
-    const created = await this.db.query<Settings>('INSERT INTO settings (user_id) VALUES ($1) RETURNING *', [userId]);
+    const created = await this.db.query<Settings>(
+      'INSERT INTO settings (user_id) VALUES ($1) RETURNING *',
+      [userId],
+    );
     return created.rows[0]!;
   }
 
@@ -178,9 +192,24 @@ export class TaskRepo {
 
   async update(userId: string, id: string, patch: Partial<Task>): Promise<Task | null> {
     const allowed: (keyof Task)[] = [
-      'title', 'description', 'status', 'priority', 'due_date', 'due_time', 'due_at', 'timezone',
-      'reminder_at', 'project', 'client', 'tags', 'completed_at', 'snoozed_until', 'recurrence',
-      'source_metadata', 'confidence_score', 'parent_task_id',
+      'title',
+      'description',
+      'status',
+      'priority',
+      'due_date',
+      'due_time',
+      'due_at',
+      'timezone',
+      'reminder_at',
+      'project',
+      'client',
+      'tags',
+      'completed_at',
+      'snoozed_until',
+      'recurrence',
+      'source_metadata',
+      'confidence_score',
+      'parent_task_id',
     ];
     const entries = Object.entries(patch).filter(([k]) => allowed.includes(k as keyof Task));
     if (!entries.length) return this.findById(userId, id);
@@ -196,7 +225,10 @@ export class TaskRepo {
   }
 
   async delete(userId: string, id: string): Promise<boolean> {
-    const res = await this.db.query('DELETE FROM tasks WHERE user_id = $1 AND id = $2', [userId, id]);
+    const res = await this.db.query('DELETE FROM tasks WHERE user_id = $1 AND id = $2', [
+      userId,
+      id,
+    ]);
     return res.rowCount > 0;
   }
 
@@ -259,7 +291,12 @@ export class TaskRepo {
     return rows;
   }
 
-  async addEvent(userId: string, taskId: string, eventType: string, payload: Record<string, unknown> = {}): Promise<void> {
+  async addEvent(
+    userId: string,
+    taskId: string,
+    eventType: string,
+    payload: Record<string, unknown> = {},
+  ): Promise<void> {
     await this.db.query(
       'INSERT INTO task_events (id, task_id, user_id, event_type, payload) VALUES ($1,$2,$3,$4,$5)',
       [newId(), taskId, userId, eventType, JSON.stringify(payload)],
@@ -282,7 +319,14 @@ export class ReminderRepo {
     const { rows } = await this.db.query<TaskReminder>(
       `INSERT INTO task_reminders (id, task_id, user_id, remind_at, kind, followup_index)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [newId(), input.task_id, input.user_id, input.remind_at, input.kind ?? 'primary', input.followup_index ?? 0],
+      [
+        newId(),
+        input.task_id,
+        input.user_id,
+        input.remind_at,
+        input.kind ?? 'primary',
+        input.followup_index ?? 0,
+      ],
     );
     return rows[0]!;
   }
@@ -385,8 +429,14 @@ export class OAuthRepo {
          status = 'connected', last_error = NULL, updated_at = now()
        RETURNING *`,
       [
-        newId(), input.user_id, input.provider, input.account_email, input.scopes,
-        input.access_token_enc, input.refresh_token_enc, input.expires_at,
+        newId(),
+        input.user_id,
+        input.provider,
+        input.account_email,
+        input.scopes,
+        input.access_token_enc,
+        input.refresh_token_enc,
+        input.expires_at,
       ],
     );
     return rows[0]!;
@@ -403,11 +453,19 @@ export class OAuthRepo {
   }
 
   async findById(id: string): Promise<OAuthConnection | null> {
-    const { rows } = await this.db.query<OAuthConnection>('SELECT * FROM oauth_connections WHERE id = $1', [id]);
+    const { rows } = await this.db.query<OAuthConnection>(
+      'SELECT * FROM oauth_connections WHERE id = $1',
+      [id],
+    );
     return rows[0] ?? null;
   }
 
-  async updateTokens(id: string, accessEnc: string, expiresAt: Date | null, refreshEnc?: string | null): Promise<void> {
+  async updateTokens(
+    id: string,
+    accessEnc: string,
+    expiresAt: Date | null,
+    refreshEnc?: string | null,
+  ): Promise<void> {
     await this.db.query(
       `UPDATE oauth_connections SET access_token_enc = $2, expires_at = $3,
          refresh_token_enc = COALESCE($4, refresh_token_enc),
@@ -436,8 +494,17 @@ export class CalendarAccountRepo {
          display_name = EXCLUDED.display_name, is_primary = EXCLUDED.is_primary,
          is_writable = EXCLUDED.is_writable, updated_at = now()
        RETURNING *`,
-      [newId(), input.user_id, input.oauth_connection_id, input.provider, input.calendar_id,
-        input.display_name, input.is_primary, input.is_writable, input.enabled],
+      [
+        newId(),
+        input.user_id,
+        input.oauth_connection_id,
+        input.provider,
+        input.calendar_id,
+        input.display_name,
+        input.is_primary,
+        input.is_writable,
+        input.enabled,
+      ],
     );
     return rows[0]!;
   }
@@ -461,7 +528,12 @@ export class CalendarAccountRepo {
 export class EmailAccountRepo {
   constructor(private readonly db: Db) {}
 
-  async upsert(input: { user_id: string; oauth_connection_id: string; provider: Provider; address: string }): Promise<EmailAccount> {
+  async upsert(input: {
+    user_id: string;
+    oauth_connection_id: string;
+    provider: Provider;
+    address: string;
+  }): Promise<EmailAccount> {
     const { rows } = await this.db.query<EmailAccount>(
       `INSERT INTO email_accounts (id, user_id, oauth_connection_id, provider, address)
        VALUES ($1,$2,$3,$4,$5)
@@ -481,7 +553,12 @@ export class EmailAccountRepo {
     return rows;
   }
 
-  async setCursor(id: string, cursor: string | null, status: string, error?: string): Promise<void> {
+  async setCursor(
+    id: string,
+    cursor: string | null,
+    status: string,
+    error?: string,
+  ): Promise<void> {
     await this.db.query(
       `UPDATE email_accounts SET sync_cursor = $2, last_scanned_at = now(), last_sync_status = $3,
          last_error = $4, updated_at = now() WHERE id = $1`,
@@ -514,8 +591,19 @@ export class EmailRepo {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        ON CONFLICT (email_account_id, provider_message_id) DO UPDATE SET thread_id = EXCLUDED.thread_id
        RETURNING id, (xmax = 0) AS is_new`,
-      [newId(), input.user_id, input.email_account_id, input.provider, input.provider_message_id,
-        input.thread_id, input.from_address, input.from_name, input.subject, input.received_at, input.web_url],
+      [
+        newId(),
+        input.user_id,
+        input.email_account_id,
+        input.provider,
+        input.provider_message_id,
+        input.thread_id,
+        input.from_address,
+        input.from_name,
+        input.subject,
+        input.received_at,
+        input.web_url,
+      ],
     );
     return { id: rows[0]!.id, isNew: Boolean(rows[0]!.is_new) };
   }
@@ -545,9 +633,21 @@ export class EmailRepo {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, now())
        ON CONFLICT (user_id, dedupe_key) DO NOTHING
        RETURNING *`,
-      [newId(), input.user_id, input.email_message_id, input.thread_id, input.title, input.description,
-        input.due_date, input.due_time, input.contact_name, input.contact_email, input.confidence,
-        input.status, input.dedupe_key],
+      [
+        newId(),
+        input.user_id,
+        input.email_message_id,
+        input.thread_id,
+        input.title,
+        input.description,
+        input.due_date,
+        input.due_time,
+        input.contact_name,
+        input.contact_email,
+        input.confidence,
+        input.status,
+        input.dedupe_key,
+      ],
     );
     return rows[0] ?? null;
   }
@@ -569,7 +669,12 @@ export class EmailRepo {
     return rows[0] ?? null;
   }
 
-  async setCandidateStatus(id: string, status: EmailTaskCandidate['status'], taskId?: string | null, snoozedUntil?: Date | null): Promise<void> {
+  async setCandidateStatus(
+    id: string,
+    status: EmailTaskCandidate['status'],
+    taskId?: string | null,
+    snoozedUntil?: Date | null,
+  ): Promise<void> {
     await this.db.query(
       `UPDATE email_task_candidates SET status = $2, task_id = COALESCE($3, task_id),
          snoozed_until = $4, responded_at = now(), updated_at = now() WHERE id = $1`,
@@ -585,7 +690,11 @@ export class EmailRepo {
     return Number(rows[0]?.n ?? 0) > 0;
   }
 
-  async listCandidates(userId: string, status?: EmailTaskCandidate['status'], limit = 50): Promise<EmailTaskCandidate[]> {
+  async listCandidates(
+    userId: string,
+    status?: EmailTaskCandidate['status'],
+    limit = 50,
+  ): Promise<EmailTaskCandidate[]> {
     const { rows } = await this.db.query<EmailTaskCandidate>(
       status
         ? 'SELECT * FROM email_task_candidates WHERE user_id = $1 AND status = $2 ORDER BY created_at DESC LIMIT $3'
@@ -616,11 +725,16 @@ export class AuditRepo {
       `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, source, input, result, status, error)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [
-        newId(), input.user_id ?? null, input.action, input.entity_type ?? null, input.entity_id ?? null,
+        newId(),
+        input.user_id ?? null,
+        input.action,
+        input.entity_type ?? null,
+        input.entity_id ?? null,
         input.source ?? 'system',
         input.input === undefined ? null : JSON.stringify(input.input),
         input.result === undefined ? null : JSON.stringify(input.result),
-        input.status ?? 'success', input.error?.slice(0, 1000) ?? null,
+        input.status ?? 'success',
+        input.error?.slice(0, 1000) ?? null,
       ],
     );
   }
@@ -651,8 +765,16 @@ export class IntegrationLogRepo {
     await this.db.query(
       `INSERT INTO integration_logs (id, user_id, integration, operation, status, latency_ms, error, meta)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [newId(), input.user_id ?? null, input.integration, input.operation, input.status,
-        input.latency_ms ?? null, input.error?.slice(0, 1000) ?? null, JSON.stringify(input.meta ?? {})],
+      [
+        newId(),
+        input.user_id ?? null,
+        input.integration,
+        input.operation,
+        input.status,
+        input.latency_ms ?? null,
+        input.error?.slice(0, 1000) ?? null,
+        JSON.stringify(input.meta ?? {}),
+      ],
     );
     if (input.user_id) {
       await this.db.query(
@@ -664,7 +786,9 @@ export class IntegrationLogRepo {
            last_failure_at = COALESCE(EXCLUDED.last_failure_at, integration_status.last_failure_at),
            last_error = EXCLUDED.last_error, updated_at = now()`,
         [
-          input.user_id, input.integration, input.status === 'success' ? 'ok' : 'degraded',
+          input.user_id,
+          input.integration,
+          input.status === 'success' ? 'ok' : 'degraded',
           input.status === 'success' ? new Date() : null,
           input.status === 'failure' ? new Date() : null,
           input.error?.slice(0, 500) ?? null,
@@ -712,11 +836,18 @@ export class AiInteractionRepo {
          tool_requested, tool_result, latency_ms, input_tokens, output_tokens, error)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
       [
-        newId(), input.user_id ?? null, input.kind, input.provider, input.model, input.intent ?? null,
+        newId(),
+        input.user_id ?? null,
+        input.kind,
+        input.provider,
+        input.model,
+        input.intent ?? null,
         input.structured_output === undefined ? null : JSON.stringify(input.structured_output),
         input.tool_requested ?? null,
         input.tool_result === undefined ? null : JSON.stringify(input.tool_result),
-        input.latency_ms ?? null, input.input_tokens ?? null, input.output_tokens ?? null,
+        input.latency_ms ?? null,
+        input.input_tokens ?? null,
+        input.output_tokens ?? null,
         input.error?.slice(0, 1000) ?? null,
       ],
     );
@@ -739,8 +870,15 @@ export class WhatsAppMessageRepo {
       `INSERT INTO whatsapp_messages (id, user_id, direction, wa_message_id, wa_from, message_type, body, payload)
        VALUES ($1,$2,'inbound',$3,$4,$5,$6,$7)
        ON CONFLICT (wa_message_id) DO NOTHING`,
-      [newId(), input.user_id, input.wa_message_id, input.wa_from, input.message_type, input.body,
-        JSON.stringify(input.payload)],
+      [
+        newId(),
+        input.user_id,
+        input.wa_message_id,
+        input.wa_from,
+        input.message_type,
+        input.body,
+        JSON.stringify(input.payload),
+      ],
     );
     return res.rowCount > 0;
   }
@@ -758,8 +896,16 @@ export class WhatsAppMessageRepo {
       `INSERT INTO whatsapp_messages (id, user_id, direction, wa_message_id, wa_to, message_type, body, status, error)
        VALUES ($1,$2,'outbound',$3,$4,$5,$6,$7,$8)
        ON CONFLICT (wa_message_id) DO NOTHING`,
-      [newId(), input.user_id, input.wa_message_id, input.wa_to, input.message_type, input.body,
-        input.status, input.error?.slice(0, 500) ?? null],
+      [
+        newId(),
+        input.user_id,
+        input.wa_message_id,
+        input.wa_to,
+        input.message_type,
+        input.body,
+        input.status,
+        input.error?.slice(0, 500) ?? null,
+      ],
     );
   }
 
@@ -794,7 +940,9 @@ export class IdempotencyRepo {
 
   async recordResult(scope: string, key: string, result: unknown): Promise<void> {
     await this.db.query('UPDATE idempotency_keys SET result = $3 WHERE scope = $1 AND key = $2', [
-      scope, key, JSON.stringify(result),
+      scope,
+      key,
+      JSON.stringify(result),
     ]);
   }
 
@@ -817,7 +965,13 @@ export interface PendingConfirmation {
 export class ConfirmationRepo {
   constructor(private readonly db: Db) {}
 
-  async create(input: { user_id: string; kind: string; payload: Record<string, unknown>; prompt: string; ttlMinutes?: number }): Promise<PendingConfirmation> {
+  async create(input: {
+    user_id: string;
+    kind: string;
+    payload: Record<string, unknown>;
+    prompt: string;
+    ttlMinutes?: number;
+  }): Promise<PendingConfirmation> {
     // A new question supersedes any older unanswered one, so a stale "which
     // task did you mean?" can never be answered by accident.
     await this.db.query(
@@ -844,7 +998,10 @@ export class ConfirmationRepo {
   }
 
   async resolve(id: string, status: 'confirmed' | 'rejected' | 'expired'): Promise<void> {
-    await this.db.query('UPDATE pending_confirmations SET status = $2, updated_at = now() WHERE id = $1', [id, status]);
+    await this.db.query(
+      'UPDATE pending_confirmations SET status = $2, updated_at = now() WHERE id = $1',
+      [id, status],
+    );
   }
 }
 
@@ -875,8 +1032,18 @@ export class ConversationRepo {
     );
   }
 
-  async get(userId: string): Promise<{ last_inbound_at: Date | null; last_outbound_at: Date | null; last_task_id: string | null } | null> {
-    const { rows } = await this.db.query<{ last_inbound_at: Date | null; last_outbound_at: Date | null; last_task_id: string | null }>(
+  async get(
+    userId: string,
+  ): Promise<{
+    last_inbound_at: Date | null;
+    last_outbound_at: Date | null;
+    last_task_id: string | null;
+  } | null> {
+    const { rows } = await this.db.query<{
+      last_inbound_at: Date | null;
+      last_outbound_at: Date | null;
+      last_task_id: string | null;
+    }>(
       'SELECT last_inbound_at, last_outbound_at, last_task_id FROM conversation_state WHERE user_id = $1',
       [userId],
     );
@@ -898,13 +1065,26 @@ export interface SchedulerJob {
 export class SchedulerJobRepo {
   constructor(private readonly db: Db) {}
 
-  async schedule(input: { user_id: string | null; job_type: string; run_at: Date; payload?: Record<string, unknown>; dedupe_key?: string | null }): Promise<SchedulerJob | null> {
+  async schedule(input: {
+    user_id: string | null;
+    job_type: string;
+    run_at: Date;
+    payload?: Record<string, unknown>;
+    dedupe_key?: string | null;
+  }): Promise<SchedulerJob | null> {
     const { rows } = await this.db.query<SchedulerJob>(
       `INSERT INTO scheduler_jobs (id, user_id, job_type, run_at, payload, dedupe_key)
        VALUES ($1,$2,$3,$4,$5,$6)
        ON CONFLICT (dedupe_key) DO NOTHING
        RETURNING *`,
-      [newId(), input.user_id, input.job_type, input.run_at, JSON.stringify(input.payload ?? {}), input.dedupe_key ?? null],
+      [
+        newId(),
+        input.user_id,
+        input.job_type,
+        input.run_at,
+        JSON.stringify(input.payload ?? {}),
+        input.dedupe_key ?? null,
+      ],
     );
     return rows[0] ?? null;
   }

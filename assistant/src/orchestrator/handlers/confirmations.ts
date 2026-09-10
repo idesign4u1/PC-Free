@@ -28,7 +28,16 @@ function parseChoice(text: string, max: number): number | null {
     const n = Number(embedded[1]);
     return n >= 1 && n <= max ? n : null;
   }
-  const words: Record<string, number> = { הראשונה: 1, ראשונה: 1, השנייה: 2, שנייה: 2, השלישית: 3, שלישית: 3, הרביעית: 4, רביעית: 4 };
+  const words: Record<string, number> = {
+    הראשונה: 1,
+    ראשונה: 1,
+    השנייה: 2,
+    שנייה: 2,
+    השלישית: 3,
+    שלישית: 3,
+    הרביעית: 4,
+    רביעית: 4,
+  };
   for (const [word, n] of Object.entries(words)) {
     if (trimmed.includes(word) && n <= max) return n;
   }
@@ -65,7 +74,8 @@ export async function handlePendingConfirmation(
       if (action === 'complete') {
         const { task: done, nextTask } = await ctx.tasks.complete(ctx.user, task, ctx.settings);
         let reply = `✅ סימנתי כבוצע: ${done.title}`;
-        if (nextTask?.due_date) reply += `\n🔁 המופע הבא: ${describeDateHe(nextTask.due_date, ctx.timezone, ctx.now)}`;
+        if (nextTask?.due_date)
+          reply += `\n🔁 המופע הבא: ${describeDateHe(nextTask.due_date, ctx.timezone, ctx.now)}`;
         return { handled: true, result: { reply, focusTaskId: null } };
       }
       if (action === 'snooze') {
@@ -74,7 +84,10 @@ export async function handlePendingConfirmation(
         await ctx.tasks.snooze(ctx.user, task, until, ctx.settings);
         return {
           handled: true,
-          result: { reply: `⏰ דחיתי: ${task.title}\nאזכיר ${describeInstantHe(until, ctx.timezone, ctx.now)}`, focusTaskId: task.id },
+          result: {
+            reply: `⏰ דחיתי: ${task.title}\nאזכיר ${describeInstantHe(until, ctx.timezone, ctx.now)}`,
+            focusTaskId: task.id,
+          },
         };
       }
       if (action === 'delete') {
@@ -98,8 +111,12 @@ export async function handlePendingConfirmation(
       if (NO.test(text)) {
         await ctx.repos.confirmations.resolve(pending.id, 'rejected');
         await ctx.repos.audit.log({
-          user_id: ctx.user.id, action: 'DANGEROUS_ACTION_REJECTED', status: 'skipped',
-          input: payload, entity_type: 'confirmation', entity_id: pending.id,
+          user_id: ctx.user.id,
+          action: 'DANGEROUS_ACTION_REJECTED',
+          status: 'skipped',
+          input: payload,
+          entity_type: 'confirmation',
+          entity_id: pending.id,
         });
         return { handled: true, result: { reply: 'בסדר, לא נגעתי בכלום.' } };
       }
@@ -123,10 +140,15 @@ export async function handlePendingConfirmation(
           if (task && (await ctx.tasks.remove(ctx.user, task))) deleted += 1;
         }
         await ctx.repos.audit.log({
-          user_id: ctx.user.id, action: 'BULK_DELETE_TASKS', status: 'success',
+          user_id: ctx.user.id,
+          action: 'BULK_DELETE_TASKS',
+          status: 'success',
           result: { requested: ids.length, deleted },
         });
-        return { handled: true, result: { reply: `🗑️ מחקתי ${deleted} משימות.`, focusTaskId: null } };
+        return {
+          handled: true,
+          result: { reply: `🗑️ מחקתי ${deleted} משימות.`, focusTaskId: null },
+        };
       }
 
       if (action === 'delete_event') {
@@ -151,7 +173,10 @@ export async function handlePendingConfirmation(
           });
           return { handled: true, result: { reply: `🗑️ מחקתי מהיומן: ${payload.title}` } };
         } catch (err) {
-          return { handled: true, result: { reply: `לא הצלחתי למחוק את האירוע (${errorText(err)}).` } };
+          return {
+            handled: true,
+            result: { reply: `לא הצלחתי למחוק את האירוע (${errorText(err)}).` },
+          };
         }
       }
       return { handled: true, result: { reply: 'לא ברור מה לאשר.' } };
@@ -185,7 +210,10 @@ export async function handlePendingConfirmation(
           },
         };
       } catch (err) {
-        return { handled: true, result: { reply: `לא הצלחתי לקבוע את האירוע (${errorText(err)}).` } };
+        return {
+          handled: true,
+          result: { reply: `לא הצלחתי לקבוע את האירוע (${errorText(err)}).` },
+        };
       }
     }
 
@@ -196,15 +224,23 @@ export async function handlePendingConfirmation(
 
       if (/^(מאוחר יותר|אחר כך|later|⏰)$/iu.test(text)) {
         await ctx.repos.confirmations.resolve(pending.id, 'confirmed');
-        await ctx.repos.email.setCandidateStatus(candidate.id, 'snoozed', null, addMinutes(ctx.now, 240));
+        await ctx.repos.email.setCandidateStatus(
+          candidate.id,
+          'snoozed',
+          null,
+          addMinutes(ctx.now, 240),
+        );
         return { handled: true, result: { reply: 'אזכיר לך על זה מאוחר יותר.' } };
       }
       if (NO.test(text)) {
         await ctx.repos.confirmations.resolve(pending.id, 'rejected');
         await ctx.repos.email.setCandidateStatus(candidate.id, 'ignored');
         await ctx.repos.audit.log({
-          user_id: ctx.user.id, action: 'EMAIL_TASK_IGNORED', entity_type: 'email_task_candidate',
-          entity_id: candidate.id, status: 'skipped',
+          user_id: ctx.user.id,
+          action: 'EMAIL_TASK_IGNORED',
+          entity_type: 'email_task_candidate',
+          entity_id: candidate.id,
+          status: 'skipped',
         });
         return { handled: true, result: { reply: 'התעלמתי.' } };
       }
@@ -228,8 +264,11 @@ export async function handlePendingConfirmation(
       );
       await ctx.repos.email.setCandidateStatus(candidate.id, 'approved', created.task.id);
       await ctx.repos.audit.log({
-        user_id: ctx.user.id, action: 'EMAIL_TASK_APPROVED', entity_type: 'task',
-        entity_id: created.task.id, result: { candidate_id: candidate.id },
+        user_id: ctx.user.id,
+        action: 'EMAIL_TASK_APPROVED',
+        entity_type: 'task',
+        entity_id: created.task.id,
+        result: { candidate_id: candidate.id },
       });
       return {
         handled: true,

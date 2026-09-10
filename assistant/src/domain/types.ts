@@ -1,6 +1,7 @@
 export type TaskStatus = 'inbox' | 'open' | 'in_progress' | 'waiting' | 'completed' | 'cancelled';
 export type TaskPriority = 'low' | 'normal' | 'high' | 'urgent';
-export type TaskSource = 'whatsapp' | 'whatsapp_voice' | 'gmail' | 'outlook' | 'api' | 'system' | 'manual';
+export type TaskSource =
+  'whatsapp' | 'whatsapp_voice' | 'gmail' | 'outlook' | 'api' | 'system' | 'manual';
 export type Provider = 'google' | 'microsoft';
 
 export const OPEN_STATUSES: TaskStatus[] = ['inbox', 'open', 'in_progress', 'waiting'];

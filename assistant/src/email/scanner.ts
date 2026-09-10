@@ -26,10 +26,18 @@ export class EmailScanner {
     private readonly extractor: EmailActionExtractor,
   ) {}
 
-  async scan(user: User, settings: Settings, opts: { now: Date; lookbackMinutes?: number; limit?: number }): Promise<ScanOutcome> {
+  async scan(
+    user: User,
+    settings: Settings,
+    opts: { now: Date; lookbackMinutes?: number; limit?: number },
+  ): Promise<ScanOutcome> {
     const outcome: ScanOutcome = {
-      scanned: 0, newMessages: 0, candidatesCreated: 0,
-      skippedDuplicate: 0, skippedLowConfidence: 0, degraded: [],
+      scanned: 0,
+      newMessages: 0,
+      candidatesCreated: 0,
+      skippedDuplicate: 0,
+      skippedLowConfidence: 0,
+      degraded: [],
     };
     if (!settings.email_scan_enabled) return outcome;
 
@@ -41,7 +49,12 @@ export class EmailScanner {
       if (!client) continue;
 
       const since = account.last_scanned_at
-        ? new Date(Math.max(account.last_scanned_at.getTime() - 60_000, opts.now.getTime() - 7 * 86_400_000))
+        ? new Date(
+            Math.max(
+              account.last_scanned_at.getTime() - 60_000,
+              opts.now.getTime() - 7 * 86_400_000,
+            ),
+          )
         : new Date(opts.now.getTime() - lookback * 60_000);
       const started = Date.now();
 
@@ -96,7 +109,10 @@ export class EmailScanner {
 
           if (ex.confidence < Number(settings.email_min_confidence)) {
             outcome.skippedLowConfidence += 1;
-            logger().debug({ ...emailLogSummary(email), confidence: ex.confidence }, 'action item below confidence floor');
+            logger().debug(
+              { ...emailLogSummary(email), confidence: ex.confidence },
+              'action item below confidence floor',
+            );
             continue;
           }
 
@@ -128,7 +144,11 @@ export class EmailScanner {
             entity_type: 'email_task_candidate',
             entity_id: candidate.id,
             source: account.provider === 'google' ? 'gmail' : 'outlook',
-            result: { title: candidate.title, confidence: ex.confidence, injection_flags: result.injectionFlags },
+            result: {
+              title: candidate.title,
+              confidence: ex.confidence,
+              injection_flags: result.injectionFlags,
+            },
           });
         }
 

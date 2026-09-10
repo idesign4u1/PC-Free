@@ -49,7 +49,11 @@ export interface App {
   scheduler: Scheduler;
 }
 
-export function buildApp(env: Env, db: Db, overrides: { sender?: WhatsAppSender; ai?: AiProvider | null } = {}): App {
+export function buildApp(
+  env: Env,
+  db: Db,
+  overrides: { sender?: WhatsAppSender; ai?: AiProvider | null } = {},
+): App {
   const caps = capabilities(env);
   const repos = createRepositories(db);
 
@@ -61,9 +65,16 @@ export function buildApp(env: Env, db: Db, overrides: { sender?: WhatsAppSender;
 
   const tokens = caps.encryption
     ? new TokenStore(repos, parseKey(env.ENCRYPTION_KEY), {
-        google: caps.google ? googleConfig(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.googleRedirectUri) : null,
+        google: caps.google
+          ? googleConfig(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.googleRedirectUri)
+          : null,
         microsoft: caps.microsoft
-          ? microsoftConfig(env.MICROSOFT_CLIENT_ID, env.MICROSOFT_CLIENT_SECRET, env.microsoftRedirectUri, env.MICROSOFT_TENANT)
+          ? microsoftConfig(
+              env.MICROSOFT_CLIENT_ID,
+              env.MICROSOFT_CLIENT_SECRET,
+              env.microsoftRedirectUri,
+              env.MICROSOFT_TENANT,
+            )
           : null,
       })
     : null;
@@ -75,7 +86,11 @@ export function buildApp(env: Env, db: Db, overrides: { sender?: WhatsAppSender;
   const sender =
     overrides.sender ??
     (caps.whatsapp
-      ? new CloudApiSender(env.WHATSAPP_PHONE_NUMBER_ID, env.WHATSAPP_ACCESS_TOKEN, env.META_GRAPH_VERSION)
+      ? new CloudApiSender(
+          env.WHATSAPP_PHONE_NUMBER_ID,
+          env.WHATSAPP_ACCESS_TOKEN,
+          env.META_GRAPH_VERSION,
+        )
       : new NullSender());
   const messenger = new Messenger(sender, repos);
 
@@ -122,5 +137,21 @@ export function buildApp(env: Env, db: Db, overrides: { sender?: WhatsAppSender;
     'application wired',
   );
 
-  return { env, db, repos, ai, stt, tokens, sender, messenger, tasks, calendar, emailScanner, router, reminders, briefing, scheduler };
+  return {
+    env,
+    db,
+    repos,
+    ai,
+    stt,
+    tokens,
+    sender,
+    messenger,
+    tasks,
+    calendar,
+    emailScanner,
+    router,
+    reminders,
+    briefing,
+    scheduler,
+  };
 }

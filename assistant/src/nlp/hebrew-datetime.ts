@@ -40,20 +40,56 @@ export interface ParsedDateTime {
 }
 
 const EMPTY: ParsedDateTime = {
-  date: null, time: null, explicitTime: false, explicitDate: false,
-  matchedText: null, confidence: 0, isDeadline: false,
+  date: null,
+  time: null,
+  explicitTime: false,
+  explicitDate: false,
+  matchedText: null,
+  confidence: 0,
+  isDeadline: false,
 };
 
 /** 0 = Sunday, matching the Israeli week. */
 const WEEKDAYS: Record<string, number> = {
-  ראשון: 0, שני: 1, שלישי: 2, רביעי: 3, חמישי: 4, שישי: 5, שבת: 6,
-  'א': 0, 'ב': 1, 'ג': 2, 'ד': 3, 'ה': 4, 'ו': 5, 'ש': 6,
+  ראשון: 0,
+  שני: 1,
+  שלישי: 2,
+  רביעי: 3,
+  חמישי: 4,
+  שישי: 5,
+  שבת: 6,
+  א: 0,
+  ב: 1,
+  ג: 2,
+  ד: 3,
+  ה: 4,
+  ו: 5,
+  ש: 6,
 };
 
 const HEBREW_NUMBERS: Record<string, number> = {
-  אחת: 1, אחד: 1, שתיים: 2, שניים: 2, שתי: 2, שני: 2, שלוש: 3, שלושה: 3,
-  ארבע: 4, ארבעה: 4, חמש: 5, חמישה: 5, שש: 6, שישה: 6, שבע: 7, שבעה: 7,
-  שמונה: 8, תשע: 9, תשעה: 9, עשר: 10, עשרה: 10, עשרים: 20,
+  אחת: 1,
+  אחד: 1,
+  שתיים: 2,
+  שניים: 2,
+  שתי: 2,
+  שני: 2,
+  שלוש: 3,
+  שלושה: 3,
+  ארבע: 4,
+  ארבעה: 4,
+  חמש: 5,
+  חמישה: 5,
+  שש: 6,
+  שישה: 6,
+  שבע: 7,
+  שבעה: 7,
+  שמונה: 8,
+  תשע: 9,
+  תשעה: 9,
+  עשר: 10,
+  עשרה: 10,
+  עשרים: 20,
 };
 
 /** Words that already mean "two of X". */
@@ -68,11 +104,16 @@ const DUALS: Record<string, { unit: Unit; count: number }> = {
 type Unit = 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
 
 const UNIT_WORDS: Record<string, Unit> = {
-  דקה: 'minutes', דקות: 'minutes',
-  שעה: 'hours', שעות: 'hours',
-  יום: 'days', ימים: 'days',
-  שבוע: 'weeks', שבועות: 'weeks',
-  חודש: 'months', חודשים: 'months',
+  דקה: 'minutes',
+  דקות: 'minutes',
+  שעה: 'hours',
+  שעות: 'hours',
+  יום: 'days',
+  ימים: 'days',
+  שבוע: 'weeks',
+  שבועות: 'weeks',
+  חודש: 'months',
+  חודשים: 'months',
 };
 
 /** Named parts of the day and the hour they resolve to. */
@@ -84,7 +125,7 @@ const DAYPARTS: Record<string, { hour: number; minute: number }> = {
   צהריים: { hour: 12, minute: 0 },
   'אחר הצהריים': { hour: 16, minute: 0 },
   'אחרי הצהריים': { hour: 16, minute: 0 },
-  'אחהצ': { hour: 16, minute: 0 },
+  אחהצ: { hour: 16, minute: 0 },
   בערב: { hour: 20, minute: 0 },
   ערב: { hour: 20, minute: 0 },
   בלילה: { hour: 22, minute: 0 },
@@ -92,14 +133,16 @@ const DAYPARTS: Record<string, { hour: number; minute: number }> = {
 };
 
 function normalise(input: string): string {
-  return input
-    // Maqaf (U+05BE) sits inside the niqqud block, so normalise dashes first —
-    // stripping niqqud beforehand would swallow the hyphen in "ב־10".
-    .replace(/[־–—]/g, '-')
-    .replace(/[ְ-ׇֽֿׁׂ]/g, '') // niqqud
-    .replace(/["״'׳]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    input
+      // Maqaf (U+05BE) sits inside the niqqud block, so normalise dashes first —
+      // stripping niqqud beforehand would swallow the hyphen in "ב־10".
+      .replace(/[־–—]/g, '-')
+      .replace(/[ְ-ׇֽֿׁׂ]/g, '') // niqqud
+      .replace(/["״'׳]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 function localNow(ctx: ParseContext): DateTime {
@@ -115,9 +158,23 @@ function fmt(dt: DateTime): LocalDate {
  * the afternoon ("ב-3" = 15:00), 7–12 means the morning ("ב-9" = 09:00).
  * A minute-qualified 24h time ("14:00") is taken literally.
  */
-function disambiguateHour(hour: number, hadExplicitMinutes: boolean, daypart: string | null): number {
+function disambiguateHour(
+  hour: number,
+  hadExplicitMinutes: boolean,
+  daypart: string | null,
+): number {
   if (daypart) {
-    const isPm = ['בערב', 'ערב', 'בלילה', 'לילה', 'בצהריים', 'צהריים', 'אחר הצהריים', 'אחרי הצהריים', 'אחהצ'].includes(daypart);
+    const isPm = [
+      'בערב',
+      'ערב',
+      'בלילה',
+      'לילה',
+      'בצהריים',
+      'צהריים',
+      'אחר הצהריים',
+      'אחרי הצהריים',
+      'אחהצ',
+    ].includes(daypart);
     if (isPm && hour < 12) return hour + 12;
     if (!isPm && hour === 12) return 0;
     return hour;
@@ -136,35 +193,60 @@ interface TimeMatch {
 
 /** Finds an explicit clock time: "10:30", "ב-10", "בשעה 8 בערב", "בשמונה בערב". */
 function findTime(text: string): TimeMatch | null {
-  const daypartRe = Object.keys(DAYPARTS).sort((a, b) => b.length - a.length).join('|');
+  const daypartRe = Object.keys(DAYPARTS)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
 
   // 10:30 / 14:00, optionally with a daypart word after it
-  const hhmm = new RegExp(`(?:^|[\\s(])(?:ב-?|בשעה\\s*|ל-?)?(\\d{1,2}):(\\d{2})(?:\\s*(${daypartRe}))?`, 'u').exec(text);
+  const hhmm = new RegExp(
+    `(?:^|[\\s(])(?:ב-?|בשעה\\s*|ל-?)?(\\d{1,2}):(\\d{2})(?:\\s*(${daypartRe}))?`,
+    'u',
+  ).exec(text);
   if (hhmm) {
     const h = Number(hhmm[1]);
     const m = Number(hhmm[2]);
     if (h <= 23 && m <= 59) {
-      return { hour: disambiguateHour(h, true, hhmm[3] ?? null), minute: m, matched: hhmm[0].trim() };
+      return {
+        hour: disambiguateHour(h, true, hhmm[3] ?? null),
+        minute: m,
+        matched: hhmm[0].trim(),
+      };
     }
   }
 
   // "ב-10 בבוקר" / "בשעה 8 בערב" / "ב 14"
-  const bare = new RegExp(`(?:^|\\s)(?:בשעה\\s*|ב-\\s*|ב\\s+|ל-\\s*)(\\d{1,2})(?:\\s*(${daypartRe}))?(?![./]\\d)(?=$|[\\s,.!?])`, 'u').exec(text);
+  const bare = new RegExp(
+    `(?:^|\\s)(?:בשעה\\s*|ב-\\s*|ב\\s+|ל-\\s*)(\\d{1,2})(?:\\s*(${daypartRe}))?(?![./]\\d)(?=$|[\\s,.!?])`,
+    'u',
+  ).exec(text);
   if (bare) {
     const h = Number(bare[1]);
     if (h >= 0 && h <= 23) {
-      return { hour: disambiguateHour(h, false, bare[2] ?? null), minute: 0, matched: bare[0].trim() };
+      return {
+        hour: disambiguateHour(h, false, bare[2] ?? null),
+        minute: 0,
+        matched: bare[0].trim(),
+      };
     }
   }
 
   // "בעשר בבוקר" / "בשמונה וחצי"
-  const words = Object.keys(HEBREW_NUMBERS).sort((a, b) => b.length - a.length).join('|');
-  const wordTime = new RegExp(`(?:^|\\s)(?:בשעה\\s*)?ב(${words})(?:\\s*ו(חצי|רבע))?(?:\\s*(${daypartRe}))?(?=$|[\\s,.!?])`, 'u').exec(text);
+  const words = Object.keys(HEBREW_NUMBERS)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+  const wordTime = new RegExp(
+    `(?:^|\\s)(?:בשעה\\s*)?ב(${words})(?:\\s*ו(חצי|רבע))?(?:\\s*(${daypartRe}))?(?=$|[\\s,.!?])`,
+    'u',
+  ).exec(text);
   if (wordTime) {
     const h = HEBREW_NUMBERS[wordTime[1]!]!;
     if (h >= 1 && h <= 12) {
       const minute = wordTime[2] === 'חצי' ? 30 : wordTime[2] === 'רבע' ? 15 : 0;
-      return { hour: disambiguateHour(h, false, wordTime[3] ?? null), minute, matched: wordTime[0].trim() };
+      return {
+        hour: disambiguateHour(h, false, wordTime[3] ?? null),
+        minute,
+        matched: wordTime[0].trim(),
+      };
     }
   }
 
@@ -197,9 +279,16 @@ function findRelativeOffset(text: string, base: DateTime): RelativeMatch | null 
     };
   }
 
-  const unitWords = Object.keys(UNIT_WORDS).sort((a, b) => b.length - a.length).join('|');
-  const numWords = Object.keys(HEBREW_NUMBERS).sort((a, b) => b.length - a.length).join('|');
-  const numeric = new RegExp(`(?:עוד|בעוד|תוך)\\s+(?:(\\d{1,3})|(${numWords}))?\\s*(${unitWords})`, 'u').exec(text);
+  const unitWords = Object.keys(UNIT_WORDS)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+  const numWords = Object.keys(HEBREW_NUMBERS)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+  const numeric = new RegExp(
+    `(?:עוד|בעוד|תוך)\\s+(?:(\\d{1,3})|(${numWords}))?\\s*(${unitWords})`,
+    'u',
+  ).exec(text);
   if (numeric) {
     const count = numeric[1] ? Number(numeric[1]) : numeric[2] ? HEBREW_NUMBERS[numeric[2]]! : 1;
     const unit = UNIT_WORDS[numeric[3]!]!;
@@ -214,7 +303,10 @@ function findRelativeOffset(text: string, base: DateTime): RelativeMatch | null 
 
 /** "ביום ראשון", "יום ה'", "בשבת". */
 function findWeekday(text: string, base: DateTime): RelativeMatch | null {
-  const names = Object.keys(WEEKDAYS).filter((k) => k.length > 1).sort((a, b) => b.length - a.length).join('|');
+  const names = Object.keys(WEEKDAYS)
+    .filter((k) => k.length > 1)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
   const full = new RegExp(`(?:ב?יום\\s+)?ה?(${names})(?:\\s+(הבא|הקרוב))?`, 'u').exec(text);
   const short = new RegExp(`ביום\\s+([אבגדהוש])(?:\\s|$|['׳])`, 'u').exec(text);
   const m = full ?? short;
@@ -234,7 +326,9 @@ function findWeekday(text: string, base: DateTime): RelativeMatch | null {
 
 /** "12/10", "12.10.2026", "ה-12 לחודש". */
 function findExplicitDate(text: string, base: DateTime): RelativeMatch | null {
-  const dmy = /(?:^|\s)(?:[בלמה]-?)?(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?=$|[\s,.!?])/u.exec(text);
+  const dmy = /(?:^|\s)(?:[בלמה]-?)?(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?(?=$|[\s,.!?])/u.exec(
+    text,
+  );
   if (dmy) {
     const day = Number(dmy[1]);
     const month = Number(dmy[2]);
@@ -370,14 +464,19 @@ export function parseHebrewDateTime(input: string, ctx: ParseContext): ParsedDat
     confidence = Math.max(confidence, 0.8);
     matchedText = matchedText ? `${matchedText} ${timeMatch.matched}` : timeMatch.matched;
     if (!date) {
-      const candidate = base.set({ hour: timeMatch.hour, minute: timeMatch.minute, second: 0, millisecond: 0 });
+      const candidate = base.set({
+        hour: timeMatch.hour,
+        minute: timeMatch.minute,
+        second: 0,
+        millisecond: 0,
+      });
       date = fmt(candidate <= base ? candidate.plus({ days: 1 }) : candidate);
       explicitDate = false;
     }
   } else if (carriedTime) {
     time = normalizeTime(`${carriedTime.hour}:${carriedTime.minute}`);
     explicitTime = true;
-  } else if (date && (ctx.defaultHour !== undefined)) {
+  } else if (date && ctx.defaultHour !== undefined) {
     time = normalizeTime(`${ctx.defaultHour}:${ctx.defaultMinute ?? 0}`);
   }
 
@@ -405,9 +504,22 @@ function escapeRegExp(s: string): string {
 
 /** Leading assistant-address phrases that are never part of the task title. */
 const LEAD_PHRASES = [
-  'תזכיר לי בבקשה', 'תזכיר לי', 'תזכירי לי', 'הזכר לי', 'להזכיר לי',
-  'תוסיף משימה', 'הוסף משימה', 'תוסיף לי משימה', 'תרשום לי', 'תרשום', 'רשום לי',
-  'צריך', 'אני צריך', 'אני חייב', 'תדאג ש', 'שים לב ש',
+  'תזכיר לי בבקשה',
+  'תזכיר לי',
+  'תזכירי לי',
+  'הזכר לי',
+  'להזכיר לי',
+  'תוסיף משימה',
+  'הוסף משימה',
+  'תוסיף לי משימה',
+  'תרשום לי',
+  'תרשום',
+  'רשום לי',
+  'צריך',
+  'אני צריך',
+  'אני חייב',
+  'תדאג ש',
+  'שים לב ש',
 ];
 
 export function stripLeadPhrases(input: string): string {

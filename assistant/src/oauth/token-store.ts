@@ -42,7 +42,8 @@ export class TokenStore {
 
   config(provider: Provider): ProviderOAuthConfig {
     const cfg = this.configs[provider];
-    if (!cfg) throw new IntegrationError(provider, `${provider} OAuth is not configured`, 501, false);
+    if (!cfg)
+      throw new IntegrationError(provider, `${provider} OAuth is not configured`, 501, false);
     return cfg;
   }
 
@@ -74,7 +75,10 @@ export class TokenStore {
       signal: AbortSignal.timeout(20_000),
     });
     if (!res.ok) {
-      throw new IntegrationError(provider, `Token exchange failed (${res.status}): ${(await res.text()).slice(0, 200)}`);
+      throw new IntegrationError(
+        provider,
+        `Token exchange failed (${res.status}): ${(await res.text()).slice(0, 200)}`,
+      );
     }
     return (await res.json()) as TokenResponse;
   }
@@ -85,14 +89,18 @@ export class TokenStore {
     accountEmail: string;
     tokens: TokenResponse;
   }): Promise<OAuthConnection> {
-    const expiresAt = input.tokens.expires_in ? new Date(Date.now() + input.tokens.expires_in * 1000) : null;
+    const expiresAt = input.tokens.expires_in
+      ? new Date(Date.now() + input.tokens.expires_in * 1000)
+      : null;
     return this.repos.oauth.upsert({
       user_id: input.userId,
       provider: input.provider,
       account_email: input.accountEmail,
       scopes: input.tokens.scope?.split(' ') ?? this.config(input.provider).scopes,
       access_token_enc: encryptSecret(input.tokens.access_token, this.key),
-      refresh_token_enc: input.tokens.refresh_token ? encryptSecret(input.tokens.refresh_token, this.key) : null,
+      refresh_token_enc: input.tokens.refresh_token
+        ? encryptSecret(input.tokens.refresh_token, this.key)
+        : null,
       expires_at: expiresAt,
     });
   }
@@ -104,14 +112,19 @@ export class TokenStore {
    */
   async accessTokenFor(connectionId: string): Promise<string> {
     const conn = await this.repos.oauth.findById(connectionId);
-    if (!conn) throw new IntegrationError('oauth', `Unknown OAuth connection ${connectionId}`, 404, false);
+    if (!conn)
+      throw new IntegrationError('oauth', `Unknown OAuth connection ${connectionId}`, 404, false);
     if (conn.status === 'revoked') {
       throw new ReauthRequiredError(conn.provider, `${conn.provider} connection was revoked`);
     }
 
-    const stillValid = conn.access_token_enc && conn.expires_at && conn.expires_at.getTime() - REFRESH_SKEW_MS > Date.now();
+    const stillValid =
+      conn.access_token_enc &&
+      conn.expires_at &&
+      conn.expires_at.getTime() - REFRESH_SKEW_MS > Date.now();
     if (stillValid) return decryptSecret(conn.access_token_enc!, this.key);
-    if (conn.access_token_enc && !conn.expires_at) return decryptSecret(conn.access_token_enc, this.key);
+    if (conn.access_token_enc && !conn.expires_at)
+      return decryptSecret(conn.access_token_enc, this.key);
 
     if (!conn.refresh_token_enc) {
       await this.repos.oauth.markStatus(conn.id, 'needs_reauth', 'no refresh token stored');
@@ -137,8 +150,13 @@ export class TokenStore {
       const detail = (await res.text()).slice(0, 200);
       // 400 with invalid_grant means the user revoked access or changed password.
       const permanent = res.status === 400 || res.status === 401;
-      await this.repos.oauth.markStatus(conn.id, permanent ? 'needs_reauth' : 'error', `refresh failed: ${detail}`);
-      if (permanent) throw new ReauthRequiredError(conn.provider, `${conn.provider} needs to be reconnected`);
+      await this.repos.oauth.markStatus(
+        conn.id,
+        permanent ? 'needs_reauth' : 'error',
+        `refresh failed: ${detail}`,
+      );
+      if (permanent)
+        throw new ReauthRequiredError(conn.provider, `${conn.provider} needs to be reconnected`);
       throw new IntegrationError(conn.provider, `Token refresh failed (${res.status})`, res.status);
     }
 
@@ -178,7 +196,11 @@ export const MICROSOFT_SCOPES = [
   'User.Read',
 ];
 
-export function googleConfig(clientId: string, clientSecret: string, redirectUri: string): ProviderOAuthConfig {
+export function googleConfig(
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string,
+): ProviderOAuthConfig {
   return {
     clientId,
     clientSecret,

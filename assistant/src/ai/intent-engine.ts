@@ -2,7 +2,11 @@ import { DateTime } from 'luxon';
 import type { AiProvider } from './provider.js';
 import { AiUnavailableError } from './provider.js';
 import { INTENT_JSON_SCHEMA, IntentSchema, emptyIntent, type Intent } from './intent-schema.js';
-import { parseHebrewDateTime, stripDateExpression, stripLeadPhrases } from '../nlp/hebrew-datetime.js';
+import {
+  parseHebrewDateTime,
+  stripDateExpression,
+  stripLeadPhrases,
+} from '../nlp/hebrew-datetime.js';
 import { hebrewWeekdayName, type LocalDate } from '../utils/time.js';
 import { sanitizeUntrusted } from './sanitize.js';
 
@@ -90,7 +94,10 @@ const RULES: Rule[] = [
   },
   {
     re: /^(מה דחוף( לי)?( היום)?|מה הכי דחוף)\??$/u,
-    build: () => ({ ...emptyIntent('LIST_TASKS', 0.94), query: emptyQuery({ range: 'today', priority: 'urgent' }) }),
+    build: () => ({
+      ...emptyIntent('LIST_TASKS', 0.94),
+      query: emptyQuery({ range: 'today', priority: 'urgent' }),
+    }),
   },
   {
     re: /^(מה הכי חשוב( שאעשה)?( עכשיו)?|מה לעשות עכשיו|במה להתחיל|מה אני צריך לעשות עכשיו)\??$/u,
@@ -99,15 +106,24 @@ const RULES: Rule[] = [
   // Calendar questions.
   {
     re: /^(מה יש לי היום|מה יש לי ביומן היום|מה התוכניות שלי היום|היומן שלי היום)\??$/u,
-    build: () => ({ ...emptyIntent('CALENDAR_QUERY', 0.96), query: emptyQuery({ range: 'today' }) }),
+    build: () => ({
+      ...emptyIntent('CALENDAR_QUERY', 0.96),
+      query: emptyQuery({ range: 'today' }),
+    }),
   },
   {
     re: /^(מה יש לי מחר|מה יש לי ביומן מחר|היומן שלי מחר)\??$/u,
-    build: () => ({ ...emptyIntent('CALENDAR_QUERY', 0.96), query: emptyQuery({ range: 'tomorrow' }) }),
+    build: () => ({
+      ...emptyIntent('CALENDAR_QUERY', 0.96),
+      query: emptyQuery({ range: 'tomorrow' }),
+    }),
   },
   {
     re: /^(מה יש לי השבוע|היומן שלי השבוע)\??$/u,
-    build: () => ({ ...emptyIntent('CALENDAR_QUERY', 0.95), query: emptyQuery({ range: 'this_week' }) }),
+    build: () => ({
+      ...emptyIntent('CALENDAR_QUERY', 0.95),
+      query: emptyQuery({ range: 'this_week' }),
+    }),
   },
   {
     re: /^(בוקר טוב|סיכום יומי|תן לי סיכום של היום|מה התוכנית להיום)\??$/u,
@@ -119,10 +135,20 @@ const RULES: Rule[] = [
   },
 ];
 
-function emptyQuery(overrides: Partial<NonNullable<Intent['query']>> = {}): NonNullable<Intent['query']> {
+function emptyQuery(
+  overrides: Partial<NonNullable<Intent['query']>> = {},
+): NonNullable<Intent['query']> {
   return {
-    range: null, date: null, end_date: null, status: null, priority: null,
-    search_text: null, project: null, client: null, contact: null, slot_minutes: null,
+    range: null,
+    date: null,
+    end_date: null,
+    status: null,
+    priority: null,
+    search_text: null,
+    project: null,
+    client: null,
+    contact: null,
+    slot_minutes: null,
     ...overrides,
   };
 }
@@ -151,7 +177,9 @@ function tryReminderFastPath(text: string, ctx: IntentContext): Intent | null {
       project: null,
       client: null,
       tags: [],
-      due: parsed.isDeadline ? { date: parsed.date, time: parsed.time, relative_expression: null } : null,
+      due: parsed.isDeadline
+        ? { date: parsed.date, time: parsed.time, relative_expression: null }
+        : null,
       reminder: { date: parsed.date, time: parsed.time, relative_expression: null },
       recurrence: null,
     },
@@ -233,7 +261,10 @@ export function resolveDateSpec(
   if (!spec) return { date: null, time: null, explicitTime: false };
 
   if (spec.relative_expression) {
-    const parsed = parseHebrewDateTime(spec.relative_expression, { now: ctx.now, timezone: ctx.timezone });
+    const parsed = parseHebrewDateTime(spec.relative_expression, {
+      now: ctx.now,
+      timezone: ctx.timezone,
+    });
     if (parsed.date) {
       return {
         date: parsed.date,
@@ -329,7 +360,9 @@ export class IntentEngine {
       // An instruction-override attempt can never produce a high-confidence
       // intent. A destructive *request* from the user is legitimate — it is
       // gated by the confirmation flow, not suppressed here.
-      const suppress = sanitized.overrideFlags.length > 0 || (ctx.untrusted === true && sanitized.flags.length > 0);
+      const suppress =
+        sanitized.overrideFlags.length > 0 ||
+        (ctx.untrusted === true && sanitized.flags.length > 0);
       if (suppress) intent = { ...intent, confidence: Math.min(intent.confidence, 0.4) };
 
       return {

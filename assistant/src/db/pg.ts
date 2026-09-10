@@ -15,7 +15,10 @@ pg.types.setTypeParser(20, (value: string) => Number(value));
 class PgDb implements Db {
   constructor(private readonly pool: pg.Pool) {}
 
-  async query<R = Record<string, unknown>>(sql: string, params: readonly unknown[] = []): Promise<QueryResult<R>> {
+  async query<R = Record<string, unknown>>(
+    sql: string,
+    params: readonly unknown[] = [],
+  ): Promise<QueryResult<R>> {
     const res = await this.pool.query(sql, params as unknown[]);
     return { rows: res.rows as R[], rowCount: res.rowCount ?? res.rows.length };
   }

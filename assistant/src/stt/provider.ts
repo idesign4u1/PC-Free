@@ -11,7 +11,11 @@ export interface TranscriptionResult {
 export interface SttProvider {
   readonly name: string;
   readonly model: string;
-  transcribe(audio: Buffer, mimeType: string, opts?: { language?: string; prompt?: string }): Promise<TranscriptionResult>;
+  transcribe(
+    audio: Buffer,
+    mimeType: string,
+    opts?: { language?: string; prompt?: string },
+  ): Promise<TranscriptionResult>;
 }
 
 /**
@@ -29,12 +33,26 @@ export class OpenAiSttProvider implements SttProvider {
     private readonly timeoutMs = 60_000,
   ) {}
 
-  async transcribe(audio: Buffer, mimeType: string, opts: { language?: string; prompt?: string } = {}): Promise<TranscriptionResult> {
+  async transcribe(
+    audio: Buffer,
+    mimeType: string,
+    opts: { language?: string; prompt?: string } = {},
+  ): Promise<TranscriptionResult> {
     const started = Date.now();
-    const extension = mimeType.includes('ogg') ? 'ogg' : mimeType.includes('mp4') || mimeType.includes('m4a') ? 'm4a' : mimeType.includes('wav') ? 'wav' : 'mp3';
+    const extension = mimeType.includes('ogg')
+      ? 'ogg'
+      : mimeType.includes('mp4') || mimeType.includes('m4a')
+        ? 'm4a'
+        : mimeType.includes('wav')
+          ? 'wav'
+          : 'mp3';
 
     const form = new FormData();
-    form.append('file', new Blob([new Uint8Array(audio)], { type: mimeType.split(';')[0] }), `voice.${extension}`);
+    form.append(
+      'file',
+      new Blob([new Uint8Array(audio)], { type: mimeType.split(';')[0] }),
+      `voice.${extension}`,
+    );
     form.append('model', this.model);
     form.append('language', opts.language ?? this.defaultLanguage);
     form.append('response_format', 'json');
@@ -52,10 +70,15 @@ export class OpenAiSttProvider implements SttProvider {
       signal: AbortSignal.timeout(this.timeoutMs),
     });
     if (!res.ok) {
-      throw new IntegrationError('stt', `Transcription failed (${res.status}): ${(await res.text()).slice(0, 200)}`, res.status);
+      throw new IntegrationError(
+        'stt',
+        `Transcription failed (${res.status}): ${(await res.text()).slice(0, 200)}`,
+        res.status,
+      );
     }
     const data = (await res.json()) as { text?: string; language?: string };
-    if (!data.text?.trim()) throw new IntegrationError('stt', 'Transcription returned no text', 422, false);
+    if (!data.text?.trim())
+      throw new IntegrationError('stt', 'Transcription returned no text', 422, false);
 
     return {
       text: data.text.trim(),

@@ -14,7 +14,10 @@ import { runMigrations } from '../../src/db/migrate.js';
 class PgliteDb implements Db {
   constructor(private readonly pg: PGlite) {}
 
-  async query<R = Record<string, unknown>>(sql: string, params: readonly unknown[] = []): Promise<QueryResult<R>> {
+  async query<R = Record<string, unknown>>(
+    sql: string,
+    params: readonly unknown[] = [],
+  ): Promise<QueryResult<R>> {
     // exec() handles the multi-statement migration scripts; query() handles
     // parameterised single statements.
     if (!params.length && /;[\s\S]*\S/.test(sql.replace(/--[^\n]*/g, ''))) {

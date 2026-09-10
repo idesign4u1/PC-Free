@@ -45,7 +45,10 @@ const EXTRACTION_JSON_SCHEMA: Record<string, unknown> = {
     title: { type: ['string', 'null'] },
     description: { type: ['string', 'null'] },
     due_date: { type: ['string', 'null'], description: 'YYYY-MM-DD if an absolute date is stated' },
-    due_relative: { type: ['string', 'null'], description: 'Hebrew relative phrase such as "יום ראשון"' },
+    due_relative: {
+      type: ['string', 'null'],
+      description: 'Hebrew relative phrase such as "יום ראשון"',
+    },
     due_time: { type: ['string', 'null'], description: 'HH:mm if a time is stated' },
     contact_name: { type: ['string', 'null'] },
     confidence: { type: 'number', minimum: 0, maximum: 1 },
@@ -53,8 +56,16 @@ const EXTRACTION_JSON_SCHEMA: Record<string, unknown> = {
     reasoning: { type: ['string', 'null'] },
   },
   required: [
-    'has_action_item', 'title', 'description', 'due_date', 'due_relative', 'due_time',
-    'contact_name', 'confidence', 'is_automated', 'reasoning',
+    'has_action_item',
+    'title',
+    'description',
+    'due_date',
+    'due_relative',
+    'due_time',
+    'contact_name',
+    'confidence',
+    'is_automated',
+    'reasoning',
   ],
 };
 
@@ -107,11 +118,22 @@ export class EmailActionExtractor {
     ctx: { userName: string; userEmail: string; timezone: string; now: Date },
   ): Promise<ExtractionResult> {
     if (!this.provider) {
-      return { extraction: null, dueDate: null, dueTime: null, injectionFlags: [], model: null, provider: null, latencyMs: 0, error: 'ai_not_configured' };
+      return {
+        extraction: null,
+        dueDate: null,
+        dueTime: null,
+        injectionFlags: [],
+        model: null,
+        provider: null,
+        latencyMs: 0,
+        error: 'ai_not_configured',
+      };
     }
 
     const sanitized = sanitizeUntrusted(email.body);
-    const today = DateTime.fromJSDate(ctx.now, { zone: ctx.timezone }).toFormat('yyyy-MM-dd (cccc)');
+    const today = DateTime.fromJSDate(ctx.now, { zone: ctx.timezone }).toFormat(
+      'yyyy-MM-dd (cccc)',
+    );
 
     try {
       const res = await this.provider.generateStructured<unknown>({
@@ -128,12 +150,30 @@ export class EmailActionExtractor {
       });
 
       if (res.refused) {
-        return { extraction: null, dueDate: null, dueTime: null, injectionFlags: sanitized.flags, model: res.model, provider: res.provider, latencyMs: res.latencyMs, error: 'model_refused' };
+        return {
+          extraction: null,
+          dueDate: null,
+          dueTime: null,
+          injectionFlags: sanitized.flags,
+          model: res.model,
+          provider: res.provider,
+          latencyMs: res.latencyMs,
+          error: 'model_refused',
+        };
       }
 
       const parsed = ExtractionSchema.safeParse(res.data);
       if (!parsed.success) {
-        return { extraction: null, dueDate: null, dueTime: null, injectionFlags: sanitized.flags, model: res.model, provider: res.provider, latencyMs: res.latencyMs, error: 'schema_validation_failed' };
+        return {
+          extraction: null,
+          dueDate: null,
+          dueTime: null,
+          injectionFlags: sanitized.flags,
+          model: res.model,
+          provider: res.provider,
+          latencyMs: res.latencyMs,
+          error: 'schema_validation_failed',
+        };
       }
 
       let extraction = parsed.data;
@@ -148,7 +188,10 @@ export class EmailActionExtractor {
       if (extraction.due_date && /^\d{4}-\d{2}-\d{2}$/.test(extraction.due_date)) {
         dueDate = extraction.due_date;
       } else if (extraction.due_relative) {
-        const resolved = parseHebrewDateTime(extraction.due_relative, { now: ctx.now, timezone: ctx.timezone });
+        const resolved = parseHebrewDateTime(extraction.due_relative, {
+          now: ctx.now,
+          timezone: ctx.timezone,
+        });
         dueDate = resolved.date;
         dueTime ??= resolved.time;
       }
@@ -164,8 +207,13 @@ export class EmailActionExtractor {
       };
     } catch (err) {
       return {
-        extraction: null, dueDate: null, dueTime: null, injectionFlags: sanitized.flags,
-        model: this.provider.model, provider: this.provider.name, latencyMs: 0,
+        extraction: null,
+        dueDate: null,
+        dueTime: null,
+        injectionFlags: sanitized.flags,
+        model: this.provider.model,
+        provider: this.provider.name,
+        latencyMs: 0,
         error: err instanceof Error ? err.message : String(err),
       };
     }

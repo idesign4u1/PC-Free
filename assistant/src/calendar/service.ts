@@ -81,7 +81,9 @@ export class CalendarService {
             error: message,
           });
           if (err instanceof ReauthRequiredError) needsReauth.push(account.provider);
-          throw Object.assign(err instanceof Error ? err : new Error(message), { provider: account.provider });
+          throw Object.assign(err instanceof Error ? err : new Error(message), {
+            provider: account.provider,
+          });
         }
       }),
     );
@@ -132,7 +134,10 @@ export class CalendarService {
     return { slots, degraded };
   }
 
-  async conflictsFor(user: User, slot: Slot): Promise<{ conflicts: UnifiedEvent[]; degraded: string[] }> {
+  async conflictsFor(
+    user: User,
+    slot: Slot,
+  ): Promise<{ conflicts: UnifiedEvent[]; degraded: string[] }> {
     const { events, degraded } = await this.fetchRange(user, {
       start: new Date(slot.start.getTime() - 60_000),
       end: new Date(slot.end.getTime() + 60_000),
@@ -159,7 +164,10 @@ export class CalendarService {
       const event =
         target.provider === 'google'
           ? await this.requireGoogle().createEvent(target, { ...input, timezone: user.timezone })
-          : await this.requireMicrosoft().createEvent(target, { ...input, timezone: user.timezone });
+          : await this.requireMicrosoft().createEvent(target, {
+              ...input,
+              timezone: user.timezone,
+            });
       await this.repos.integrationLogs.log({
         user_id: user.id,
         integration: target.provider === 'google' ? 'google_calendar' : 'outlook_calendar',
@@ -190,9 +198,12 @@ export class CalendarService {
 
   async deleteEvent(user: User, event: UnifiedEvent): Promise<void> {
     const accounts = await this.accounts(user);
-    const account = accounts.find((a) => a.provider === event.provider && a.calendar_id === event.calendarId);
+    const account = accounts.find(
+      (a) => a.provider === event.provider && a.calendar_id === event.calendarId,
+    );
     if (!account) throw new ReauthRequiredError('calendar', 'That calendar is no longer connected');
-    if (event.provider === 'google') await this.requireGoogle().deleteEvent(account, event.providerEventId);
+    if (event.provider === 'google')
+      await this.requireGoogle().deleteEvent(account, event.providerEventId);
     else await this.requireMicrosoft().deleteEvent(account, event.providerEventId);
     await this.repos.audit.log({
       user_id: user.id,
@@ -204,7 +215,11 @@ export class CalendarService {
   }
 
   /** Discovers calendars for a freshly connected account and stores them. */
-  async syncCalendarList(user: User, connectionId: string, provider: 'google' | 'microsoft'): Promise<number> {
+  async syncCalendarList(
+    user: User,
+    connectionId: string,
+    provider: 'google' | 'microsoft',
+  ): Promise<number> {
     if (provider === 'google') {
       const list = await this.requireGoogle().listCalendars(connectionId);
       for (const cal of list) {
@@ -243,7 +258,8 @@ export class CalendarService {
   }
 
   private requireMicrosoft(): MicrosoftCalendarClient {
-    if (!this.microsoft) throw new ReauthRequiredError('outlook_calendar', 'Microsoft is not configured');
+    if (!this.microsoft)
+      throw new ReauthRequiredError('outlook_calendar', 'Microsoft is not configured');
     return this.microsoft;
   }
 }

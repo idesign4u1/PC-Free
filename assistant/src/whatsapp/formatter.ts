@@ -10,7 +10,12 @@ import { describeDateHe, formatTimeOnly, instantToWallClock } from '../utils/tim
 
 const PRIORITY_MARK: Record<string, string> = { urgent: '🔴', high: '🟠', normal: '', low: '' };
 
-export function taskLine(task: Task, timezone: string, now: Date, opts: { index?: number; showDate?: boolean } = {}): string {
+export function taskLine(
+  task: Task,
+  timezone: string,
+  now: Date,
+  opts: { index?: number; showDate?: boolean } = {},
+): string {
   const prefix = opts.index !== undefined ? `${opts.index}. ` : '• ';
   const mark = PRIORITY_MARK[task.priority] ?? '';
   const when =
@@ -21,25 +26,44 @@ export function taskLine(task: Task, timezone: string, now: Date, opts: { index?
   return `${prefix}${mark ? `${mark} ` : ''}${task.title}${when}${overdue}`;
 }
 
-export function formatTaskCreated(task: Task, reminderAt: Date | null, timezone: string, now: Date): string {
+export function formatTaskCreated(
+  task: Task,
+  reminderAt: Date | null,
+  timezone: string,
+  now: Date,
+): string {
   const lines = [`✅ הוספתי: ${task.title}`];
   if (reminderAt) {
     const { date, time } = instantToWallClock(reminderAt, timezone);
     lines.push(`🔔 ${describeDateHe(date, timezone, now)} ב־${time}`);
   } else if (task.due_date) {
-    lines.push(`📌 עד ${describeDateHe(task.due_date, timezone, now)}${task.due_time ? ` ב־${task.due_time}` : ''}`);
+    lines.push(
+      `📌 עד ${describeDateHe(task.due_date, timezone, now)}${task.due_time ? ` ב־${task.due_time}` : ''}`,
+    );
   }
   return lines.join('\n');
 }
 
-export function formatTaskList(tasks: Task[], timezone: string, now: Date, heading: string): string {
+export function formatTaskList(
+  tasks: Task[],
+  timezone: string,
+  now: Date,
+  heading: string,
+): string {
   if (!tasks.length) return `${heading}\n\nאין משימות פתוחות 🎉`;
   const lines = tasks.map((t, i) => taskLine(t, timezone, now, { index: i + 1 }));
   return `${heading}\n\n${lines.join('\n')}`;
 }
 
-export function formatDisambiguation(reference: string, tasks: Task[], timezone: string, now: Date): string {
-  const lines = tasks.map((t, i) => taskLine(t, timezone, now, { index: i + 1, showDate: Boolean(t.due_date) }));
+export function formatDisambiguation(
+  reference: string,
+  tasks: Task[],
+  timezone: string,
+  now: Date,
+): string {
+  const lines = tasks.map((t, i) =>
+    taskLine(t, timezone, now, { index: i + 1, showDate: Boolean(t.due_date) }),
+  );
   return `מצאתי כמה משימות שמתאימות ל"${reference}":\n\n${lines.join('\n')}\n\nאיזו מהן? (מספר)`;
 }
 
@@ -66,9 +90,15 @@ export function formatAgenda(
   return parts.join('\n');
 }
 
-export function formatFreeSlots(slots: { start: Date; end: Date }[], timezone: string, heading: string): string {
+export function formatFreeSlots(
+  slots: { start: Date; end: Date }[],
+  timezone: string,
+  heading: string,
+): string {
   if (!slots.length) return `${heading}\n\nלא מצאתי חלון פנוי מתאים.`;
-  const lines = slots.map((s) => `${formatTimeOnly(s.start, timezone)}–${formatTimeOnly(s.end, timezone)}`);
+  const lines = slots.map(
+    (s) => `${formatTimeOnly(s.start, timezone)}–${formatTimeOnly(s.end, timezone)}`,
+  );
   return `${heading}\n\n${lines.join('\n')}`;
 }
 

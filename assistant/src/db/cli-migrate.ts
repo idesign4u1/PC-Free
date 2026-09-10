@@ -10,7 +10,11 @@ if (!env.DATABASE_URL) {
 const db = createPgDb(env.DATABASE_URL, env.DATABASE_SSL);
 try {
   const ran = await runMigrations(db);
-  console.log(ran.length ? `Applied ${ran.length} migration(s): ${ran.join(', ')}` : 'Database already up to date.');
+  console.log(
+    ran.length
+      ? `Applied ${ran.length} migration(s): ${ran.join(', ')}`
+      : 'Database already up to date.',
+  );
 } finally {
   await db.close();
 }

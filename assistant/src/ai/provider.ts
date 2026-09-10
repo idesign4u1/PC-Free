@@ -37,7 +37,11 @@ export interface AiProvider {
   readonly model: string;
   generateStructured<T>(req: StructuredRequest): Promise<StructuredResponse<T>>;
   /** Short free-text generation, used for briefing prose. Optional. */
-  generateText?(input: { system: string; user: string; maxTokens?: number }): Promise<{ text: string; latencyMs: number }>;
+  generateText?(input: {
+    system: string;
+    user: string;
+    maxTokens?: number;
+  }): Promise<{ text: string; latencyMs: number }>;
 }
 
 export class AiUnavailableError extends Error {

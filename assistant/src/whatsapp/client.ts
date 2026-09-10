@@ -86,7 +86,12 @@ export class CloudApiSender implements WhatsAppSender {
       if (res.status === 401 || parsed.error?.code === 190) {
         throw new ReauthRequiredError('whatsapp', `WhatsApp access token rejected: ${message}`);
       }
-      throw new IntegrationError('whatsapp', `WhatsApp send failed (${res.status}): ${message}`, res.status, res.status >= 500 || res.status === 429);
+      throw new IntegrationError(
+        'whatsapp',
+        `WhatsApp send failed (${res.status}): ${message}`,
+        res.status,
+        res.status >= 500 || res.status === 429,
+      );
     }
     return JSON.parse(text) as Record<string, unknown>;
   }
@@ -128,7 +133,12 @@ export class CloudApiSender implements WhatsAppSender {
     return { messageId: CloudApiSender.messageId(response), usedTemplate: false };
   }
 
-  async sendTemplate(to: string, name: string, locale: string, bodyParams: string[]): Promise<SendResult> {
+  async sendTemplate(
+    to: string,
+    name: string,
+    locale: string,
+    bodyParams: string[],
+  ): Promise<SendResult> {
     const response = await this.post(`${this.phoneNumberId}/messages`, {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
@@ -138,7 +148,11 @@ export class CloudApiSender implements WhatsAppSender {
         name,
         language: { code: locale },
         ...(bodyParams.length
-          ? { components: [{ type: 'body', parameters: bodyParams.map((text) => ({ type: 'text', text })) }] }
+          ? {
+              components: [
+                { type: 'body', parameters: bodyParams.map((text) => ({ type: 'text', text })) },
+              ],
+            }
           : {}),
       },
     });
@@ -153,7 +167,11 @@ export class CloudApiSender implements WhatsAppSender {
       signal: AbortSignal.timeout(this.timeoutMs),
     });
     if (!metaRes.ok) {
-      throw new IntegrationError('whatsapp', `Media lookup failed (${metaRes.status})`, metaRes.status);
+      throw new IntegrationError(
+        'whatsapp',
+        `Media lookup failed (${metaRes.status})`,
+        metaRes.status,
+      );
     }
     const meta = (await metaRes.json()) as { url?: string; mime_type?: string };
     if (!meta.url) throw new IntegrationError('whatsapp', 'Media response had no URL');
@@ -163,7 +181,11 @@ export class CloudApiSender implements WhatsAppSender {
       signal: AbortSignal.timeout(this.timeoutMs * 2),
     });
     if (!binRes.ok) {
-      throw new IntegrationError('whatsapp', `Media download failed (${binRes.status})`, binRes.status);
+      throw new IntegrationError(
+        'whatsapp',
+        `Media download failed (${binRes.status})`,
+        binRes.status,
+      );
     }
     return {
       data: Buffer.from(await binRes.arrayBuffer()),
@@ -193,6 +215,11 @@ export class NullSender implements WhatsAppSender {
   }
 
   async downloadMedia(): Promise<{ data: Buffer; mimeType: string }> {
-    throw new IntegrationError('whatsapp', 'WhatsApp media download requires credentials', 501, false);
+    throw new IntegrationError(
+      'whatsapp',
+      'WhatsApp media download requires credentials',
+      501,
+      false,
+    );
   }
 }

@@ -18,7 +18,9 @@ export async function runMigrations(db: Db, dir = migrationsDir()): Promise<stri
       applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
   const applied = new Set(
-    (await db.query<{ name: string }>('SELECT name FROM schema_migrations')).rows.map((r) => r.name),
+    (await db.query<{ name: string }>('SELECT name FROM schema_migrations')).rows.map(
+      (r) => r.name,
+    ),
   );
   const files = (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort();
   const ran: string[] = [];

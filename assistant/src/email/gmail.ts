@@ -83,7 +83,11 @@ export class GmailClient implements EmailClient {
     private readonly timeoutMs = 25_000,
   ) {}
 
-  private async get<T>(connectionId: string, path: string, params: Record<string, string> = {}): Promise<T> {
+  private async get<T>(
+    connectionId: string,
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<T> {
     const token = await this.tokens.accessTokenFor(connectionId);
     const url = new URL(`${BASE}${path}`);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
@@ -107,14 +111,20 @@ export class GmailClient implements EmailClient {
     opts: { since: Date; cursor: string | null; limit: number; selfAddress: string },
   ): Promise<{ messages: FetchedEmail[]; cursor: string | null }> {
     const afterSeconds = Math.floor(opts.since.getTime() / 1000);
-    const list = await this.get<{ messages?: { id: string }[] }>(connectionId, '/users/me/messages', {
-      q: `in:inbox -in:chats after:${afterSeconds}`,
-      maxResults: String(Math.min(opts.limit, 50)),
-    });
+    const list = await this.get<{ messages?: { id: string }[] }>(
+      connectionId,
+      '/users/me/messages',
+      {
+        q: `in:inbox -in:chats after:${afterSeconds}`,
+        maxResults: String(Math.min(opts.limit, 50)),
+      },
+    );
 
     const messages: FetchedEmail[] = [];
     for (const ref of list.messages ?? []) {
-      const full = await this.get<GmailMessage>(connectionId, `/users/me/messages/${ref.id}`, { format: 'full' });
+      const full = await this.get<GmailMessage>(connectionId, `/users/me/messages/${ref.id}`, {
+        format: 'full',
+      });
       const headers = full.payload?.headers;
       const from = parseAddress(header(headers, 'From'));
       const to = (header(headers, 'To') ?? '')
@@ -131,7 +141,9 @@ export class GmailClient implements EmailClient {
         body: extractBody(full.payload) || full.snippet || '',
         receivedAt: full.internalDate ? new Date(Number(full.internalDate)) : null,
         webUrl: `https://mail.google.com/mail/u/0/#inbox/${full.threadId}`,
-        isFromSelf: from.address === opts.selfAddress.toLowerCase() || Boolean(full.labelIds?.includes('SENT')),
+        isFromSelf:
+          from.address === opts.selfAddress.toLowerCase() ||
+          Boolean(full.labelIds?.includes('SENT')),
       });
     }
     // The cursor records the newest message we saw, purely for observability.
