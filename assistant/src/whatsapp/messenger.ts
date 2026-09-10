@@ -3,7 +3,7 @@ import type { User } from '../domain/types.js';
 import { CUSTOMER_SERVICE_WINDOW_MS, type ReplyButton, type WhatsAppSender } from './client.js';
 import { logger } from '../utils/logger.js';
 import { truncateForStorage, hashPhone } from '../utils/redact.js';
-import { errorText } from '../utils/errors.js';
+import { errorText, IntegrationError, ReauthRequiredError } from '../utils/errors.js';
 
 export interface OutboundOptions {
   buttons?: ReplyButton[];
@@ -23,6 +23,12 @@ export interface OutboundResult {
   usedTemplate: boolean;
   skippedReason?: 'window_closed_no_template' | 'send_failed';
   error?: string;
+  /**
+   * True when the failure looks transient (5xx, 429, network) and the caller
+   * should try again later. False for a rejected token or a malformed request,
+   * where retrying only burns attempts.
+   */
+  retryable?: boolean;
 }
 
 /**
@@ -106,7 +112,14 @@ export class Messenger {
       return { sent: true, messageId: result.messageId, usedTemplate: result.usedTemplate };
     } catch (err) {
       const message = errorText(err);
-      logger().error({ err: message }, 'whatsapp send failed');
+      // A rejected token needs a human; anything else transient is worth a retry.
+      const retryable =
+        err instanceof ReauthRequiredError
+          ? false
+          : err instanceof IntegrationError
+            ? err.retryable
+            : true;
+      logger().error({ err: message, retryable }, 'whatsapp send failed');
       await this.repos.whatsapp.recordOutbound({
         user_id: user.id,
         wa_message_id: null,

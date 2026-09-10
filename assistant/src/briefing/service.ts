@@ -25,14 +25,12 @@ export class BriefingService {
     const [openTasks, overdue, calendarResult] = await Promise.all([
       this.tasks.listForRange(user, 'today', now, {}),
       this.tasks.listForRange(user, 'overdue', now, {}),
-      this.calendar
-        .fetchDay(user, today)
-        .catch(() => ({
-          events: [],
-          degraded: ['לא הצלחתי לקרוא את היומן.'],
-          healthy: [],
-          needsReauth: [],
-        })),
+      this.calendar.fetchDay(user, today).catch(() => ({
+        events: [],
+        degraded: ['לא הצלחתי לקרוא את היומן.'],
+        healthy: [],
+        needsReauth: [],
+      })),
     ]);
     const allOpen = await this.repos.tasks.list(user.id, { limit: 200 });
 
@@ -85,14 +83,12 @@ export class BriefingService {
     ]);
 
     const tomorrow = addDaysLocal(today, 1, tz);
-    const tomorrowCal = await this.calendar
-      .fetchDay(user, tomorrow)
-      .catch(() => ({
-        events: [],
-        degraded: ['לא הצלחתי לקרוא את היומן למחר.'],
-        healthy: [],
-        needsReauth: [],
-      }));
+    const tomorrowCal = await this.calendar.fetchDay(user, tomorrow).catch(() => ({
+      events: [],
+      degraded: ['לא הצלחתי לקרוא את היומן למחר.'],
+      healthy: [],
+      needsReauth: [],
+    }));
     const tomorrowMeetings = tomorrowCal.events.filter((e) => !e.allDay).length;
 
     const lines = ['🌙 סיכום היום', '', `בוצעו: ${completed.length}`, `נשארו: ${remaining.length}`];

@@ -195,7 +195,7 @@ export class Router {
       case 'EMAIL_QUERY':
         return this.handleEmailQuery(ctx);
       case 'DAILY_BRIEFING':
-        return this.briefingPlaceholder(ctx);
+        return this.dailyBriefing(ctx);
       case 'CONFIRM_YES':
       case 'CONFIRM_NO':
         // The pending-confirmation branch already ran; nothing is open.
@@ -211,11 +211,12 @@ export class Router {
   }
 
   /**
-   * Wired by the app to the real briefing service. Kept as an injectable
-   * property so the router has no dependency on the scheduler.
+   * Wired by the composition root to BriefingService. Kept as an injectable
+   * property so the router carries no dependency on the briefing or scheduler
+   * modules; the default only applies if the app was assembled by hand.
    */
-  briefingPlaceholder: (ctx: HandlerContext) => Promise<HandlerResult> = async () => ({
-    reply: 'הסיכום היומי לא מוגדר עדיין.',
+  dailyBriefing: (ctx: HandlerContext) => Promise<HandlerResult> = async () => ({
+    reply: 'הסיכום היומי לא זמין כרגע.',
   });
 
   private async handleEmailQuery(ctx: HandlerContext): Promise<HandlerResult> {

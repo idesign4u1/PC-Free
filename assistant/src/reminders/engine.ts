@@ -14,6 +14,13 @@ export interface ReminderDispatchSummary {
   failed: number;
 }
 
+/**
+ * Backoff for transient delivery failures, in minutes. A reminder is only
+ * abandoned once this ladder is exhausted — a WhatsApp outage must not silently
+ * swallow the thing you asked to be reminded about.
+ */
+const RETRY_BACKOFF_MINUTES = [2, 10, 30, 120];
+
 export interface ReminderTemplateConfig {
   /** Name of an approved Utility template for out-of-window reminders. */
   name: string;
@@ -112,7 +119,32 @@ export class ReminderEngine {
         );
         return 'deferred';
       }
+      // `attempt_count` was incremented when this reminder was claimed, so the
+      // first failure reads as attempt 1.
+      const backoff = RETRY_BACKOFF_MINUTES[reminder.attempt_count];
+      if (result.retryable !== false && backoff !== undefined) {
+        await this.repos.reminders.defer(
+          reminder.id,
+          addMinutes(now, backoff),
+          `delivery failed, retrying: ${result.error ?? 'unknown error'}`,
+        );
+        logger().warn(
+          { reminder: reminder.id, attempt: reminder.attempt_count, retryInMinutes: backoff },
+          'reminder delivery failed, scheduled a retry',
+        );
+        return 'deferred';
+      }
+
       await this.repos.reminders.markFailed(reminder.id, result.error ?? 'send failed');
+      await this.repos.audit.log({
+        user_id: user.id,
+        action: 'SEND_REMINDER',
+        entity_type: 'task',
+        entity_id: task.id,
+        source: 'scheduler',
+        status: 'failure',
+        error: result.error ?? 'send failed',
+      });
       return 'failed';
     }
 

@@ -109,7 +109,7 @@ export function buildApp(
     : null;
 
   const briefing = new BriefingService(repos, tasks, calendar);
-  router.briefingPlaceholder = async (ctx) => ({
+  router.dailyBriefing = async (ctx) => ({
     reply: await briefing.buildDailyBriefing(ctx.user, ctx.settings, ctx.now),
   });
 

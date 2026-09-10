@@ -1032,9 +1032,7 @@ export class ConversationRepo {
     );
   }
 
-  async get(
-    userId: string,
-  ): Promise<{
+  async get(userId: string): Promise<{
     last_inbound_at: Date | null;
     last_outbound_at: Date | null;
     last_task_id: string | null;

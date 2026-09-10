@@ -185,6 +185,77 @@ describe('reminder delivery', () => {
   });
 });
 
+describe('transient delivery failures', () => {
+  beforeEach(async () => {
+    await db.query(`UPDATE task_reminders SET status = 'cancelled' WHERE status = 'pending'`);
+    sender.shouldFail = false;
+  });
+
+  it('retries with backoff instead of dropping the reminder', async () => {
+    const created = await app.tasks.create(
+      {
+        user,
+        title: 'תזכורת שנכשלת',
+        source: 'api',
+        reminder: { date: '2026-09-20', time: '10:00' },
+      },
+      settings,
+    );
+    const at = created.reminderAt!;
+
+    sender.shouldFail = true;
+    const failed = await app.reminders.dispatchDue(new Date(at.getTime() + 1000), 10);
+    expect(failed.deferred).toBe(1);
+    expect(failed.failed).toBe(0);
+
+    const [pending] = await app.repos.reminders.listForTask(created.task.id);
+    expect(pending!.status).toBe('pending');
+    // First backoff step is two minutes.
+    expect(pending!.remind_at.getTime()).toBeGreaterThan(at.getTime());
+
+    // Once WhatsApp recovers, the retry delivers.
+    sender.shouldFail = false;
+    const recovered = await app.reminders.dispatchDue(
+      new Date(pending!.remind_at.getTime() + 1000),
+      10,
+    );
+    expect(recovered.sent).toBe(1);
+    expect(sender.sent.some((m) => m.body.includes('תזכורת שנכשלת'))).toBe(true);
+  });
+
+  it('gives up after the backoff ladder is exhausted, and records why', async () => {
+    const created = await app.tasks.create(
+      {
+        user,
+        title: 'תזכורת אבודה',
+        source: 'api',
+        reminder: { date: '2026-09-21', time: '10:00' },
+      },
+      settings,
+    );
+    sender.shouldFail = true;
+
+    let cursor = created.reminderAt!.getTime() + 1000;
+    let outcome = { sent: 0, deferred: 0, failed: 0, cancelled: 0, claimed: 0 };
+    for (let i = 0; i < 6; i += 1) {
+      outcome = await app.reminders.dispatchDue(new Date(cursor), 10);
+      const [r] = await app.repos.reminders.listForTask(created.task.id);
+      if (r!.status !== 'pending') break;
+      cursor = r!.remind_at.getTime() + 1000;
+    }
+    expect(outcome.failed).toBe(1);
+
+    const [reminder] = await app.repos.reminders.listForTask(created.task.id);
+    expect(reminder!.status).toBe('failed');
+
+    const log = await app.repos.audit.recent(20, user.id);
+    expect(log.some((row) => row.action === 'SEND_REMINDER' && row.status === 'failure')).toBe(
+      true,
+    );
+    sender.shouldFail = false;
+  });
+});
+
 describe('snooze', () => {
   it('reschedules and records the new time', async () => {
     const created = await app.tasks.create(
