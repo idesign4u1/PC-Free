@@ -5,7 +5,9 @@ import type { UnifiedEvent } from '../src/domain/types.js';
 
 const TZ = 'Asia/Jerusalem';
 
-function ev(overrides: Partial<UnifiedEvent> & { title: string; start: string; end: string }): UnifiedEvent {
+type EvInput = Omit<Partial<UnifiedEvent>, 'start' | 'end'> & { title: string; start: string; end: string };
+
+function ev(overrides: EvInput): UnifiedEvent {
   return {
     provider: 'google',
     calendarId: 'primary',

@@ -525,7 +525,20 @@ export class EmailRepo {
   }
 
   /** Dedupe is by (user, dedupe_key); a reply on the same thread never re-proposes. */
-  async insertCandidate(input: Omit<EmailTaskCandidate, 'id' | 'task_id' | 'snoozed_until'> & { wa_message_id?: string | null }): Promise<EmailTaskCandidate | null> {
+  async insertCandidate(input: {
+    user_id: string;
+    email_message_id: string;
+    thread_id: string;
+    title: string;
+    description: string | null;
+    due_date: string | null;
+    due_time: string | null;
+    contact_name: string | null;
+    contact_email: string | null;
+    confidence: number;
+    status: EmailTaskCandidate['status'];
+    dedupe_key: string;
+  }): Promise<EmailTaskCandidate | null> {
     const { rows } = await this.db.query<EmailTaskCandidate>(
       `INSERT INTO email_task_candidates (id, user_id, email_message_id, thread_id, title, description,
          due_date, due_time, contact_name, contact_email, confidence, status, dedupe_key, proposed_at)

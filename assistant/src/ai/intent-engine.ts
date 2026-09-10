@@ -14,6 +14,12 @@ export interface IntentContext {
   pendingQuestion?: { kind: string; prompt: string; options?: string[] } | null;
   /** Title of the task the user most recently touched, for "דחה את זה". */
   lastTaskTitle?: string | null;
+  /**
+   * True when the text did not originate from the user themselves (a forwarded
+   * message, quoted email text). Untrusted text has every injection heuristic
+   * applied, not just the instruction-override ones.
+   */
+  untrusted?: boolean;
 }
 
 export interface IntentResult {
@@ -127,7 +133,9 @@ function emptyQuery(overrides: Partial<NonNullable<Intent['query']>> = {}): NonN
  * model entirely.
  */
 function tryReminderFastPath(text: string, ctx: IntentContext): Intent | null {
-  if (!/^(תזכיר|תזכירי|הזכר|להזכיר|תזכור)\s+לי\b/u.test(text)) return null;
+  // Note: \b is an ASCII word boundary and never matches next to a Hebrew
+  // letter — use an explicit lookahead instead.
+  if (!/^(תזכיר|תזכירי|הזכר|להזכיר|תזכור)\s+לי(?=\s|$)/u.test(text)) return null;
   const parsed = parseHebrewDateTime(text, { now: ctx.now, timezone: ctx.timezone });
   if (!parsed.date || parsed.confidence < 0.8) return null;
   const title = stripLeadPhrases(stripDateExpression(text, parsed));
@@ -318,8 +326,11 @@ export class IntentEngine {
       }
 
       let intent = parsed.data;
-      // Content that tried to inject instructions can never be high-confidence.
-      if (sanitized.flags.length) intent = { ...intent, confidence: Math.min(intent.confidence, 0.4) };
+      // An instruction-override attempt can never produce a high-confidence
+      // intent. A destructive *request* from the user is legitimate — it is
+      // gated by the confirmation flow, not suppressed here.
+      const suppress = sanitized.overrideFlags.length > 0 || (ctx.untrusted === true && sanitized.flags.length > 0);
+      if (suppress) intent = { ...intent, confidence: Math.min(intent.confidence, 0.4) };
 
       return {
         intent,
