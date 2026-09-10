@@ -179,7 +179,7 @@ describe('timezone and DST', () => {
     const instant = wallClockToInstant({ date: '2027-03-26', time: '02:30', timezone: TZ });
     const back = instantToWallClock(instant, TZ);
     expect(back.date).toBe('2027-03-26');
-    expect(Number(back.time.slice(0, 2))).toBeGreaterThanOrEqual(3);
+    expect(Number(String(back.time).slice(0, 2))).toBeGreaterThanOrEqual(3);
   });
 });
 
