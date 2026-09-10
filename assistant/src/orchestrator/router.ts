@@ -16,6 +16,7 @@ import {
   handleCreateEvent,
   handleDeleteEvent,
   handleFreeTimeQuery,
+  handleUpdateEvent,
 } from './handlers/calendar.js';
 import { handlePendingConfirmation } from './handlers/confirmations.js';
 import { HELP_TEXT } from '../whatsapp/formatter.js';
@@ -188,8 +189,9 @@ export class Router {
       case 'FREE_TIME_QUERY':
         return handleFreeTimeQuery(ctx, intent);
       case 'CREATE_EVENT':
-      case 'UPDATE_EVENT':
         return handleCreateEvent(ctx, intent);
+      case 'UPDATE_EVENT':
+        return handleUpdateEvent(ctx, intent);
       case 'DELETE_EVENT':
         return handleDeleteEvent(ctx, intent);
       case 'EMAIL_QUERY':

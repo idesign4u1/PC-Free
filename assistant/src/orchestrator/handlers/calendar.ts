@@ -7,6 +7,7 @@ import {
   addMinutes,
   describeDateHe,
   formatTimeOnly,
+  localDayRange,
   localWeekRange,
   todayInZone,
   wallClockToInstant,
@@ -188,6 +189,98 @@ export async function handleCreateEvent(
     }
     return { reply: 'לא הצלחתי לקבוע את האירוע ביומן כרגע. שמרתי את הפרטים בלוג.' };
   }
+}
+
+/**
+ * Moving an existing event.
+ *
+ * Neither Google nor Microsoft is edited in place here: we delete and recreate,
+ * which is correct for a personal time block but would silently drop the guest
+ * list on a meeting. So an event with attendees is never moved automatically —
+ * the assistant says who is on it and leaves the decision to the user.
+ */
+export async function handleUpdateEvent(
+  ctx: HandlerContext,
+  intent: Intent,
+): Promise<HandlerResult> {
+  const spec = intent.event;
+  const reference = spec?.title ?? intent.task_reference;
+  if (!reference) return { reply: 'איזה אירוע להזיז?' };
+
+  const when = resolveDateSpec(spec?.start ?? null, ctx);
+  if (!when.date || !when.time) {
+    return { reply: `לאיזו שעה להזיז את "${reference}"? צריך תאריך ושעה.` };
+  }
+
+  // Look for the event across a window around both the old and the new date.
+  const today = todayInZone(ctx.timezone, ctx.now);
+  const searchStart = localDayRange(today, ctx.timezone).start;
+  const searchEnd = new Date(localDayRange(when.date, ctx.timezone).end.getTime() + 7 * 86_400_000);
+  const { events, degraded } = await ctx.calendar.fetchRange(ctx.user, {
+    start: searchStart,
+    end: searchEnd,
+  });
+
+  const matches = events.filter((e) => e.title.toLowerCase().includes(reference.toLowerCase()));
+  if (!matches.length) return { reply: `לא מצאתי ביומן אירוע בשם "${reference}".`, degraded };
+  if (matches.length > 1) {
+    const list = matches
+      .slice(0, 5)
+      .map(
+        (e, i) =>
+          `${i + 1}. ${describeDateHe(
+            new Date(e.start).toLocaleDateString('en-CA', { timeZone: ctx.timezone }),
+            ctx.timezone,
+            ctx.now,
+          )} ${formatTimeOnly(e.start, ctx.timezone)} — ${e.title}`,
+      )
+      .join('\n');
+    return { reply: `מצאתי כמה אירועים בשם הזה:\n\n${list}\n\nאיזה מהם להזיז?`, degraded };
+  }
+
+  const event = matches[0]!;
+  if (event.attendees.length > 0) {
+    return {
+      reply:
+        `ל"${event.title}" יש ${event.attendees.length} משתתפים, ואם אזיז אותו דרכי הם עלולים לאבד את ההזמנה.\n` +
+        'עדיף להזיז אותו ישירות ביומן.',
+      degraded,
+    };
+  }
+
+  const duration =
+    spec?.duration_minutes ??
+    Math.max(15, Math.round((event.end.getTime() - event.start.getTime()) / 60_000));
+  const newStart = wallClockToInstant({ date: when.date, time: when.time, timezone: ctx.timezone });
+  const newEnd = addMinutes(newStart, duration);
+
+  const { conflicts } = await ctx.calendar.conflictsFor(ctx.user, { start: newStart, end: newEnd });
+  const realConflicts = conflicts.filter((c) => c.providerEventId !== event.providerEventId);
+  if (realConflicts.length) {
+    return {
+      reply: `ב־${when.time} כבר יש לך "${realConflicts[0]!.title}". לא הזזתי כלום.`,
+      degraded,
+    };
+  }
+
+  try {
+    await ctx.calendar.createEvent(ctx.user, {
+      title: event.title,
+      start: newStart,
+      end: newEnd,
+      ...(event.location ? { location: event.location } : {}),
+    });
+    await ctx.calendar.deleteEvent(ctx.user, event);
+  } catch (err) {
+    if (err instanceof ReauthRequiredError)
+      return { reply: 'היומן מנותק — צריך לחבר אותו מחדש (/connect).' };
+    return { reply: `לא הצלחתי להזיז את האירוע (${errorText(err)}).`, degraded };
+  }
+
+  return {
+    reply: `📅 הזזתי: ${event.title}\n${describeDateHe(when.date, ctx.timezone, ctx.now)} ${when.time}–${formatTimeOnly(newEnd, ctx.timezone)}`,
+    degraded,
+  };
 }
 
 export async function handleDeleteEvent(
