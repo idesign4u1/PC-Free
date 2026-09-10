@@ -75,7 +75,8 @@ openssl rand -hex 24        # → ADMIN_TOKEN
 DATABASE_URL=postgres://assistant:assistant@localhost:5432/assistant
 ENCRYPTION_KEY=<the base64 value above>
 ADMIN_TOKEN=<the hex value above>
-AI_API_KEY=<your Anthropic API key>
+AI_PROVIDER=openai
+AI_API_KEY=<your OpenAI API key, sk-...>
 BOOTSTRAP_USER_PHONE=972501234567   # your own number, digits only, no +
 ```
 
@@ -104,7 +105,7 @@ Send your assistant number `תזכיר לי בעוד שתי דקות לבדוק 
 
 - **[docs/GOOGLE_SETUP.md](docs/GOOGLE_SETUP.md)** → then visit `/oauth/google/start`
 - **[docs/MICROSOFT_SETUP.md](docs/MICROSOFT_SETUP.md)** → then visit `/oauth/microsoft/start`
-- Voice notes: set `STT_PROVIDER=openai` and `STT_API_KEY`
+- Voice notes: nothing to do — the same OpenAI key transcribes them
 
 The app boots with whatever is configured. `GET /health` tells you what is
 missing.
@@ -116,10 +117,12 @@ missing.
 | Service | Account | Guide | Needed for |
 |---|---|---|---|
 | Meta WhatsApp Business Platform | developers.facebook.com | [META_SETUP](docs/META_SETUP.md) | **Required** — the interface |
-| Anthropic (or OpenAI) | console.anthropic.com | — | **Required** — understanding free text |
+| OpenAI | platform.openai.com | [OPENAI_SETUP](docs/OPENAI_SETUP.md) | **Required** — understanding free text, and voice notes, from one key |
 | Google Cloud | console.cloud.google.com | [GOOGLE_SETUP](docs/GOOGLE_SETUP.md) | Google Calendar, Gmail |
 | Microsoft Entra | entra.microsoft.com | [MICROSOFT_SETUP](docs/MICROSOFT_SETUP.md) | Outlook Calendar, Outlook Mail |
-| OpenAI | platform.openai.com | — | Voice note transcription |
+
+Anthropic works too — `AI_PROVIDER=anthropic` with an `sk-ant-...` key. Nothing
+outside `src/ai/` knows which provider is in use.
 
 Permissions are least-privilege throughout: calendars read/write (it creates
 events), **mail read-only** (it never sends, replies or deletes).
@@ -139,7 +142,7 @@ ones without a sensible default:
 | `META_APP_SECRET` | Verifies webhook authenticity |
 | `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN` | From the Meta app |
 | `WHATSAPP_VERIFY_TOKEN` | You invent it; paste the same string into Meta |
-| `AI_API_KEY` | Anthropic by default (`AI_MODEL=claude-opus-5`) |
+| `AI_API_KEY` | OpenAI by default. Leave `AI_MODEL` blank for `gpt-5.6-terra`; the same key also transcribes voice notes |
 | `ADMIN_TOKEN` | Guards `/admin`, `/health/full` and the REST API. Required in production |
 | `BOOTSTRAP_USER_PHONE` | Your number, E.164 digits, no `+`. Only this number may command the assistant |
 
@@ -178,6 +181,13 @@ curl -s "localhost:3000/api/parse-date?text=%D7%91%D7%A2%D7%95%D7%93%20%D7%A9%D7
   -H "authorization: Bearer $ADMIN_TOKEN" | jq
 ```
 
+Confirm the AI key and model actually work — a wrong model id otherwise shows
+up only as the assistant quietly falling back to the rules path:
+
+```bash
+curl -s localhost:3000/api/ai-check -H "authorization: Bearer $ADMIN_TOKEN" | jq
+```
+
 Force a scheduler pass instead of waiting:
 
 ```bash
@@ -212,6 +222,10 @@ WhatsApp → signature check → idempotency → [voice → transcript]
 
 Three decisions worth knowing about:
 
+**One key, two jobs.** OpenAI is the default provider: the same key parses
+Hebrew and transcribes voice notes. `GET /api/ai-check` does a live round-trip
+so a wrong key or a retired model id says so instead of degrading in silence.
+
 **The model classifies; it never acts.** It returns one JSON object matched
 against a schema. Every side effect runs in ordinary typed code behind a
 confidence floor and, for anything destructive, an explicit confirmation. An
@@ -236,7 +250,8 @@ Full detail: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ```
 src/
-  ai/            provider abstraction, intent schema, injection defence
+  ai/            provider abstraction, intent schema, OpenAI schema adapter,
+                 injection defence
   nlp/           deterministic Hebrew date/time parser
   tasks/         task service, reference matching, recurrence
   calendar/      Google + Microsoft clients, merge, free/busy
@@ -262,7 +277,8 @@ Integration tests run **real PostgreSQL in-process** via PGlite, so the
 production SQL — constraints, `ON CONFLICT`, `FOR UPDATE SKIP LOCKED` — is
 exercised without provisioning a server.
 
-Covered: Hebrew date parsing (relative days, weekdays, offsets, dayparts,
+Covered: the OpenAI strict-schema adapter and provider (request shape,
+refusals, truncation, error mapping), Hebrew date parsing (relative days, weekdays, offsets, dayparts,
 deadlines, `dd/MM`), DST including the spring-forward gap, quiet hours, calendar
 merge and deduplication, free/busy and conflicts, task creation, completion,
 ambiguity, snooze, recurrence, email extraction and thread deduplication,
@@ -276,6 +292,7 @@ first message to completed task.
 |---|---|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design decisions, data model, request flow |
 | [META_SETUP.md](docs/META_SETUP.md) | WhatsApp Cloud API, step by step |
+| [OPENAI_SETUP.md](docs/OPENAI_SETUP.md) | Key, model choice, cost, and the strict-schema details |
 | [GOOGLE_SETUP.md](docs/GOOGLE_SETUP.md) | Google Cloud project, OAuth, scopes |
 | [MICROSOFT_SETUP.md](docs/MICROSOFT_SETUP.md) | Entra registration, Graph permissions |
 | [SECURITY.md](docs/SECURITY.md) | Threat model and controls |

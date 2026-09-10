@@ -118,17 +118,38 @@ see exactly the JS types production sees.
 
 ```
 AiProvider (interface)
-   ├── AnthropicProvider   Messages API + output_config.format (structured outputs)
-   └── OpenAiProvider      Chat Completions + response_format: json_schema
+   ├── OpenAiProvider      Chat Completions + response_format: json_schema  (default)
+   └── AnthropicProvider   Messages API + output_config.format
 ```
 
-Nothing outside `src/ai/` imports a vendor SDK. Adding a provider means
-implementing one method.
+Nothing outside `src/ai/` knows which provider is in use. Adding one means
+implementing a single method.
 
 **Structured output, not prompt-and-hope.** The provider is handed a JSON
 Schema and returns JSON that matches it; Zod validates it again before anything
 is dispatched. A malformed or refused response becomes `UNKNOWN`, which asks
 the user to rephrase.
+
+**One canonical schema, two dialects.** `intent-schema.ts` is written for
+expressiveness — numeric ranges, nullable unions, descriptions. Anthropic takes
+it as-is. OpenAI's strict Structured Outputs is a deliberately small subset and
+**rejects the entire request** on an unsupported keyword, so
+`openai-schema.ts` rewrites it on the way out: unsupported validation keywords
+are stripped and `type: ["string","null"]` becomes `anyOf`. The constraints are
+not lost, they move — Zod enforces them on the way back, and numbers outside
+their range are clamped rather than rejected, because a model that answers
+`confidence: 1.2` still understood the sentence.
+
+**Refusals and truncation are outcomes, not crashes.** Both providers can
+decline: Anthropic with `stop_reason: "refusal"`, OpenAI with a `message.refusal`
+field on an HTTP 200 whose `content` is null. Each is detected before the
+response is parsed. Hitting the output cap is reported as truncation, so it
+does not masquerade as invalid JSON.
+
+**Verifying the credential.** Model ids change and keys get revoked, and the
+failure is silent — the assistant just falls back to the rules path and seems
+dim. `GET /api/ai-check` does a real round-trip and reports the configured
+model, the model that answered, and the latency.
 
 **Cost and latency.** Intent parsing runs at `effort: low` — it is a short
 classification on a chat path, not a reasoning task. The rules fast path removes

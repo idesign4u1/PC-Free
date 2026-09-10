@@ -59,8 +59,8 @@ export function buildApp(
 
   const ai = overrides.ai !== undefined ? overrides.ai : createAiProvider(env);
   const stt =
-    env.STT_PROVIDER === 'openai' && env.STT_API_KEY
-      ? new OpenAiSttProvider(env.STT_API_KEY, env.STT_MODEL, env.STT_LANGUAGE)
+    env.sttProvider === 'openai' && env.sttApiKey
+      ? new OpenAiSttProvider(env.sttApiKey, env.STT_MODEL, env.STT_LANGUAGE)
       : null;
 
   const tokens = caps.encryption
@@ -129,7 +129,7 @@ export function buildApp(
   logger().info(
     {
       whatsapp: caps.whatsapp,
-      ai: caps.ai ? env.AI_PROVIDER : false,
+      ai: caps.ai ? `${env.AI_PROVIDER}:${env.aiModel}` : false,
       stt: Boolean(stt),
       google: caps.google,
       microsoft: caps.microsoft,

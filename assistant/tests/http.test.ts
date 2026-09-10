@@ -236,6 +236,43 @@ describe('REST API', () => {
   });
 });
 
+describe('AI credential check', () => {
+  it('requires the admin token', async () => {
+    expect((await server.inject({ method: 'GET', url: '/api/ai-check' })).statusCode).toBe(401);
+  });
+
+  it('surfaces a provider failure with the configured model named', async () => {
+    // The scripted provider has no entry for the probe, so it throws — which
+    // is exactly the shape of a bad key or a retired model id.
+    const res = await server.inject({
+      method: 'GET',
+      url: '/api/ai-check',
+      headers: { authorization: `Bearer ${ADMIN}` },
+    });
+    expect(res.statusCode).toBe(502);
+    expect(res.json().ok).toBe(false);
+    expect(res.json().configuredModel).toBeTruthy();
+    expect(res.json().error).toBeTruthy();
+  });
+
+  it('reports plainly when no key is configured at all', async () => {
+    const bare = buildApp(testEnv(), db, { sender, ai: null });
+    const bareServer = await createServer(bare);
+    await bareServer.ready();
+    try {
+      const res = await bareServer.inject({
+        method: 'GET',
+        url: '/api/ai-check',
+        headers: { authorization: `Bearer ${ADMIN}` },
+      });
+      expect(res.statusCode).toBe(503);
+      expect(res.json().error).toContain('AI_API_KEY');
+    } finally {
+      await bareServer.close();
+    }
+  });
+});
+
 describe('admin dashboard', () => {
   it('requires the token', async () => {
     expect((await server.inject({ method: 'GET', url: '/admin' })).statusCode).toBe(401);

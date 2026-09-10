@@ -37,6 +37,22 @@ export const INTENT_TYPES = [
 
 export type IntentType = (typeof INTENT_TYPES)[number];
 
+/**
+ * OpenAI's strict Structured Outputs does not enforce numeric ranges (the
+ * adapter has to strip `minimum`/`maximum` for the request to be accepted at
+ * all), so the range lives here instead. Clamping rather than rejecting is
+ * deliberate: a model that answers `confidence: 1.2` still understood the
+ * sentence, and failing the whole intent over it would drop the message.
+ */
+const clampedNumber = (min: number, max: number) =>
+  z.number().transform((v) => Math.min(max, Math.max(min, v)));
+
+const clampedInt = (min: number, max: number) =>
+  z
+    .number()
+    .int()
+    .transform((v) => Math.min(max, Math.max(min, v)));
+
 const DateSpec = z.object({
   /** Absolute local date, YYYY-MM-DD. */
   date: z.string().nullable(),
@@ -48,7 +64,7 @@ const DateSpec = z.object({
 
 export const IntentSchema = z.object({
   intent: z.enum(INTENT_TYPES),
-  confidence: z.number().min(0).max(1),
+  confidence: clampedNumber(0, 1),
   /** One short Hebrew sentence explaining the reading, for the debug trail. */
   reasoning: z.string().nullable(),
 
@@ -70,9 +86,11 @@ export const IntentSchema = z.object({
       recurrence: z
         .object({
           freq: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
-          interval: z.number().int().min(1).max(52),
-          byweekday: z.array(z.number().int().min(0).max(6)),
-          bymonthday: z.number().int().min(1).max(31).nullable(),
+          interval: clampedInt(1, 52),
+          byweekday: z
+            .array(z.number().int())
+            .transform((days) => days.filter((d) => d >= 0 && d <= 6)),
+          bymonthday: clampedInt(1, 31).nullable(),
         })
         .nullable(),
     })
@@ -85,7 +103,7 @@ export const IntentSchema = z.object({
     .object({
       title: z.string().nullable(),
       start: DateSpec.nullable(),
-      duration_minutes: z.number().int().min(5).max(1440).nullable(),
+      duration_minutes: clampedInt(5, 1440).nullable(),
       location: z.string().nullable(),
       attendees: z.array(z.string()),
     })
@@ -117,7 +135,7 @@ export const IntentSchema = z.object({
       client: z.string().nullable(),
       contact: z.string().nullable(),
       /** For FREE_TIME_QUERY: how long a slot the user needs. */
-      slot_minutes: z.number().int().min(15).max(600).nullable(),
+      slot_minutes: clampedInt(15, 600).nullable(),
     })
     .nullable(),
 
@@ -125,7 +143,7 @@ export const IntentSchema = z.object({
     .object({
       until: DateSpec.nullable(),
       /** "דחה בשעה" → 60. */
-      minutes: z.number().int().min(5).max(20160).nullable(),
+      minutes: clampedInt(5, 20160).nullable(),
     })
     .nullable(),
 

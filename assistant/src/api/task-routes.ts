@@ -167,6 +167,54 @@ export function registerTaskRoutes(server: FastifyInstance, app: App): void {
     );
   });
 
+  /**
+   * A live round-trip to the AI provider. Model ids change and keys get
+   * revoked; without this, a wrong value shows up only as every message
+   * quietly falling back to the rules path.
+   */
+  server.get('/api/ai-check', async (req, reply) => {
+    if (!(await guard(req, reply))) return reply;
+    if (!app.ai) {
+      return reply.code(503).send({
+        ok: false,
+        provider: app.env.AI_PROVIDER,
+        error: 'AI_API_KEY is not configured — only the deterministic rules path is active.',
+      });
+    }
+
+    const started = Date.now();
+    try {
+      const res = await app.ai.generateStructured<{ ok: boolean }>({
+        name: 'health_check',
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: { ok: { type: 'boolean' } },
+          required: ['ok'],
+        },
+        system: 'Reply with {"ok": true}.',
+        user: 'ping',
+        maxTokens: 300,
+      });
+      return reply.send({
+        ok: !res.refused,
+        provider: app.ai.name,
+        configuredModel: app.env.aiModel,
+        respondingModel: res.model,
+        latencyMs: res.latencyMs,
+        ...(res.refused ? { error: 'the model refused the probe' } : {}),
+      });
+    } catch (err) {
+      return reply.code(502).send({
+        ok: false,
+        provider: app.ai.name,
+        configuredModel: app.env.aiModel,
+        latencyMs: Date.now() - started,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  });
+
   server.post('/api/scheduler/tick', async (req, reply) => {
     if (!(await guard(req, reply))) return reply;
     await app.scheduler.tick();

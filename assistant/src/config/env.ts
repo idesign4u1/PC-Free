@@ -37,17 +37,23 @@ const EnvSchema = z.object({
   WHATSAPP_ALLOW_UNVERIFIED_WEBHOOK: bool.default(false),
 
   // --- AI ---
-  AI_PROVIDER: z.enum(['anthropic', 'openai']).default('anthropic'),
+  AI_PROVIDER: z.enum(['openai', 'anthropic']).default('openai'),
   AI_API_KEY: z.string().default(''),
-  AI_MODEL: z.string().default('claude-opus-5'),
+  // Model ids are provider-specific and change over time; GET /api/ai-check
+  // confirms the configured one actually answers.
+  AI_MODEL: z.string().default(''),
   AI_EFFORT: z.enum(['low', 'medium', 'high', 'xhigh', 'max']).default('low'),
   AI_MAX_TOKENS: z.coerce.number().int().positive().default(4096),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(45_000),
+  /** Override for an OpenAI-compatible gateway, a proxy, or a test double. */
+  AI_BASE_URL: z.string().default(''),
 
   // --- Speech to text (voice notes) ---
-  STT_PROVIDER: z.enum(['openai', 'none']).default('none'),
+  // 'auto' turns transcription on whenever an OpenAI key is available, since
+  // the same key serves both chat and audio.
+  STT_PROVIDER: z.enum(['auto', 'openai', 'none']).default('auto'),
   STT_API_KEY: z.string().default(''),
-  STT_MODEL: z.string().default('whisper-1'),
+  STT_MODEL: z.string().default('gpt-4o-transcribe'),
   STT_LANGUAGE: z.string().default('he'),
 
   // --- Google (Calendar + Gmail) ---
@@ -74,6 +80,22 @@ const EnvSchema = z.object({
 export type Env = z.infer<typeof EnvSchema> & {
   googleRedirectUri: string;
   microsoftRedirectUri: string;
+  /** Resolved per provider when AI_MODEL is left blank. */
+  aiModel: string;
+  /** Resolved STT provider after 'auto' is applied. */
+  sttProvider: 'openai' | 'none';
+  /** Falls back to AI_API_KEY when both are OpenAI. */
+  sttApiKey: string;
+};
+
+/**
+ * Sensible current defaults per provider, used when AI_MODEL is blank.
+ * Both are mid-tier: intent parsing is a short classification, and the rules
+ * fast path already handles the common phrasings without a model at all.
+ */
+const DEFAULT_MODELS: Record<'openai' | 'anthropic', string> = {
+  openai: 'gpt-5.6-terra',
+  anthropic: 'claude-opus-5',
 };
 
 let cached: Env | null = null;
@@ -87,10 +109,26 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
   const base = parsed.data;
+
+  // One OpenAI key can serve both chat and transcription, so a user who only
+  // sets AI_API_KEY still gets working voice notes.
+  const sttApiKey = base.STT_API_KEY || (base.AI_PROVIDER === 'openai' ? base.AI_API_KEY : '');
+  const sttProvider: 'openai' | 'none' =
+    base.STT_PROVIDER === 'none'
+      ? 'none'
+      : base.STT_PROVIDER === 'openai'
+        ? 'openai'
+        : sttApiKey
+          ? 'openai'
+          : 'none';
+
   return {
     ...base,
     googleRedirectUri: new URL(base.GOOGLE_REDIRECT_PATH, base.APP_URL).toString(),
     microsoftRedirectUri: new URL(base.MICROSOFT_REDIRECT_PATH, base.APP_URL).toString(),
+    aiModel: base.AI_MODEL || DEFAULT_MODELS[base.AI_PROVIDER],
+    sttProvider,
+    sttApiKey,
   };
 }
 
@@ -118,7 +156,7 @@ export function capabilities(e: Env = env()): CapabilityReport {
   return {
     whatsapp: Boolean(e.WHATSAPP_PHONE_NUMBER_ID && e.WHATSAPP_ACCESS_TOKEN && e.META_APP_SECRET),
     ai: Boolean(e.AI_API_KEY),
-    stt: e.STT_PROVIDER !== 'none' && Boolean(e.STT_API_KEY),
+    stt: e.sttProvider !== 'none' && Boolean(e.sttApiKey),
     google: Boolean(e.GOOGLE_CLIENT_ID && e.GOOGLE_CLIENT_SECRET),
     microsoft: Boolean(e.MICROSOFT_CLIENT_ID && e.MICROSOFT_CLIENT_SECRET),
     database: Boolean(e.DATABASE_URL),
@@ -137,6 +175,6 @@ export function missingCredentials(e: Env = env()): string[] {
   if (!caps.ai) out.push('AI_API_KEY');
   if (!caps.google) out.push('GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
   if (!caps.microsoft) out.push('MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET');
-  if (!caps.stt) out.push('STT_PROVIDER / STT_API_KEY (voice notes)');
+  if (!caps.stt) out.push('STT_API_KEY or an OpenAI AI_API_KEY (voice notes)');
   return out;
 }

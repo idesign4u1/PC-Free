@@ -29,7 +29,8 @@ const ExtractionSchema = z.object({
   due_time: z.string().nullable(),
   /** Who is waiting for it. */
   contact_name: z.string().nullable(),
-  confidence: z.number().min(0).max(1),
+  // Clamped, not rejected: see the note in ai/intent-schema.ts.
+  confidence: z.number().transform((v) => Math.min(1, Math.max(0, v))),
   /** True when the mail is a newsletter/automated notification. */
   is_automated: z.boolean(),
   reasoning: z.string().nullable(),
