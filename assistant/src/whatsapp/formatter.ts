@@ -49,8 +49,9 @@ export function formatTaskList(
   timezone: string,
   now: Date,
   heading: string,
+  emptyMessage = 'אין משימות פתוחות 🎉',
 ): string {
-  if (!tasks.length) return `${heading}\n\nאין משימות פתוחות 🎉`;
+  if (!tasks.length) return `${heading}\n\n${emptyMessage}`;
   const lines = tasks.map((t, i) => taskLine(t, timezone, now, { index: i + 1 }));
   return `${heading}\n\n${lines.join('\n')}`;
 }

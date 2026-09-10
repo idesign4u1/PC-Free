@@ -154,21 +154,37 @@ function emptyQuery(
 }
 
 /**
- * "תזכיר לי מחר ב-10 להתקשר לדני" is unambiguous: an explicit reminder verb
- * plus a resolvable date. We build the CREATE_TASK intent locally and skip the
- * model entirely.
+ * Deterministic CREATE_TASK construction.
+ *
+ * Three shapes cover most of what actually gets typed, and all three are
+ * unambiguous once a date resolves cleanly:
+ *
+ *   reminder verb + date   "תזכיר לי מחר ב-10 להתקשר לדני"
+ *                          "ביום חמישי תזכיר לי לדבר עם רואה החשבון"
+ *                          "עוד שעתיים להזכיר לי להתקשר ליוסי"
+ *   task verb + deadline   "צריך לשלוח הצעה לאביב עד יום ראשון"
+ *   add-task phrasing      "תוסיף משימה לבדוק את הקמפיין של דני"
+ *
+ * Each avoids a model round-trip, and keeps the assistant usable when the AI
+ * provider is unreachable. Anything less clear-cut falls through to the model.
  */
-function tryReminderFastPath(text: string, ctx: IntentContext): Intent | null {
-  // Note: \b is an ASCII word boundary and never matches next to a Hebrew
-  // letter — use an explicit lookahead instead.
-  if (!/^(תזכיר|תזכירי|הזכר|להזכיר|תזכור)\s+לי(?=\s|$)/u.test(text)) return null;
-  const parsed = parseHebrewDateTime(text, { now: ctx.now, timezone: ctx.timezone });
-  if (!parsed.date || parsed.confidence < 0.8) return null;
-  const title = stripLeadPhrases(stripDateExpression(text, parsed));
-  if (title.length < 2) return null;
+const REMINDER_VERB = /(?:^|\s)(תזכיר|תזכירי|תזכור|הזכר|הזכירי|להזכיר)\s+לי(?=\s|$)/u;
+const TASK_VERB = /(?:^|\s)(?:צריך|אני צריך|חייב|אני חייב|יש לי|עליי|עלי)(?=\s)/u;
+const ADD_TASK = /^(?:תוסיף|הוסף|תוסיפי|תרשום|רשום|תכתוב)\s+(?:לי\s+)?(?:משימה|למשימות)?\s*/u;
+
+function buildCreateTask(
+  title: string,
+  parsed: ReturnType<typeof parseHebrewDateTime>,
+  asDeadline: boolean,
+  confidence: number,
+): Intent {
+  // No date at all means no due and no reminder — null, not an object of nulls.
+  const spec = parsed.date
+    ? { date: parsed.date, time: parsed.time, relative_expression: null }
+    : null;
   return {
-    ...emptyIntent('CREATE_TASK', 0.93),
-    reasoning: 'ניסוח תזכורת מפורש עם תאריך חד־משמעי',
+    ...emptyIntent('CREATE_TASK', confidence),
+    reasoning: 'ניסוח חד־משמעי שנפתר ללא מודל',
     task: {
       title,
       description: null,
@@ -177,13 +193,45 @@ function tryReminderFastPath(text: string, ctx: IntentContext): Intent | null {
       project: null,
       client: null,
       tags: [],
-      due: parsed.isDeadline
-        ? { date: parsed.date, time: parsed.time, relative_expression: null }
-        : null,
-      reminder: { date: parsed.date, time: parsed.time, relative_expression: null },
+      due: asDeadline ? spec : null,
+      // A date-only deadline gets no reminder: the user named a due date, not
+      // a moment to be pinged. A reminder phrasing always gets one.
+      reminder: asDeadline ? null : spec,
       recurrence: null,
     },
   };
+}
+
+function tryTaskFastPath(text: string, ctx: IntentContext): Intent | null {
+  const isReminder = REMINDER_VERB.test(text);
+  const isTaskVerb = TASK_VERB.test(text);
+  const isAdd = ADD_TASK.test(text);
+  if (!isReminder && !isTaskVerb && !isAdd) return null;
+
+  const parsed = parseHebrewDateTime(text, { now: ctx.now, timezone: ctx.timezone });
+
+  // "תוסיף משימה לבדוק את הקמפיין" — no date at all, but the intent is explicit.
+  if (isAdd && !parsed.date) {
+    const title = stripLeadPhrases(text.replace(ADD_TASK, '')).trim();
+    return title.length >= 2 ? buildCreateTask(title, parsed, false, 0.9) : null;
+  }
+
+  if (!parsed.date || parsed.confidence < 0.8) return null;
+
+  let title = stripDateExpression(text, parsed);
+  title = isAdd ? title.replace(ADD_TASK, '') : title;
+  title = stripLeadPhrases(title).trim();
+  if (title.length < 2) return null;
+
+  // A deadline phrasing ("עד יום ראשון") sets a due date; a reminder phrasing
+  // sets a reminder. When both are present, the reminder verb wins and the
+  // deadline is kept as the due date too.
+  const asDeadline = parsed.isDeadline && !isReminder;
+  const intent = buildCreateTask(title, parsed, asDeadline, isReminder ? 0.93 : 0.88);
+  if (isReminder && parsed.isDeadline && intent.task) {
+    intent.task.due = { date: parsed.date, time: parsed.time, relative_expression: null };
+  }
+  return intent;
 }
 
 export function resolveByRules(rawText: string, ctx: IntentContext): Intent | null {
@@ -196,7 +244,7 @@ export function resolveByRules(rawText: string, ctx: IntentContext): Intent | nu
       if (built) return built;
     }
   }
-  return tryReminderFastPath(text, ctx);
+  return tryTaskFastPath(text, ctx);
 }
 
 /* -------------------------------------------------------------- LLM prompt */

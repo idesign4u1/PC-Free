@@ -495,6 +495,11 @@ export function stripDateExpression(input: string, parsed: ParsedDateTime): stri
       out = out.replace(new RegExp(`\\s*${escapeRegExp(piece)}\\s*`, 'u'), ' ');
     }
   }
+  // Removing "יום ראשון" from "…לאביב עד יום ראשון" leaves a dangling "עד".
+  if (parsed.isDeadline) {
+    out = out.replace(/\s*(?:עד|לא יאוחר מ|דדליין|deadline)\s*$/u, ' ');
+    out = out.replace(/(?:^|\s)(?:עד|לא יאוחר מ)(?=\s|$)/u, ' ');
+  }
   return out.replace(/\s+/g, ' ').trim();
 }
 

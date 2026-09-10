@@ -265,18 +265,20 @@ export async function handleListTasks(ctx: HandlerContext, intent: Intent): Prom
     tasks = await ctx.tasks.listForRange(ctx.user, range, ctx.now, extra);
   }
 
-  const heading =
+  // The empty state has to answer the question that was asked: "nothing
+  // overdue" and "nothing due today" are different pieces of news.
+  const [heading, empty] =
     range === 'overdue'
-      ? '🔴 משימות באיחור'
+      ? ['🔴 משימות באיחור', 'אין משימות באיחור 🎉']
       : range === 'today'
-        ? '📋 המשימות שלך להיום'
+        ? ['📋 המשימות שלך להיום', 'אין משימות להיום 🎉']
         : range === 'tomorrow'
-          ? '📋 המשימות שלך למחר'
+          ? ['📋 המשימות שלך למחר', 'אין משימות למחר']
           : range === 'this_week'
-            ? '📋 המשימות שלך השבוע'
-            : '📋 המשימות שלך';
+            ? ['📋 המשימות שלך השבוע', 'אין משימות לשבוע הזה']
+            : ['📋 המשימות שלך', 'אין משימות פתוחות 🎉'];
 
-  return { reply: formatTaskList(tasks, ctx.user.timezone, ctx.now, heading) };
+  return { reply: formatTaskList(tasks, ctx.user.timezone, ctx.now, heading, empty) };
 }
 
 export async function handleSearchTasks(
@@ -292,7 +294,15 @@ export async function handleSearchTasks(
     limit: 25,
     ...(q?.status ? { statuses: [q.status] } : {}),
   });
-  return { reply: formatTaskList(tasks, ctx.user.timezone, ctx.now, `🔎 תוצאות עבור "${needle}"`) };
+  return {
+    reply: formatTaskList(
+      tasks,
+      ctx.user.timezone,
+      ctx.now,
+      `🔎 תוצאות עבור "${needle}"`,
+      `לא מצאתי משימות שמתאימות ל"${needle}".`,
+    ),
+  };
 }
 
 /**
