@@ -1,0 +1,49 @@
+# Paper trading stack. Nothing here can place a real-money order: LIVE requires
+# config.yaml changes plus ENABLE_LIVE_TRADING plus live credentials.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: algotrader
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-algotrader}
+      POSTGRES_DB: algotrader
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U algotrader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  trader:
+    build: .
+    command: ["algotrader", "paper", "--host", "0.0.0.0", "--port", "8000"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://algotrader:${POSTGRES_PASSWORD:-algotrader}@db:5432/algotrader
+      REDIS_URL: redis://redis:6379/0
+      CONFIG_PATH: /app/config/config.yaml
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./config:/app/config:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

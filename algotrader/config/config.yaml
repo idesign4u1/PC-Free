@@ -1,0 +1,253 @@
+# =============================================================================
+# algotrader - default configuration (CONSERVATIVE, tuned for PAPER trading)
+# ---------------------------------------------------------------------------
+# Every trading/risk parameter lives here. Strategy and risk code must never
+# hardcode thresholds. Changes to this file are hashed and persisted to the
+# `config_history` table so that every decision can be replayed against the
+# exact configuration that produced it.
+# =============================================================================
+
+system:
+  # SAFE_MODE | PAPER_MODE | LIVE_MODE | EMERGENCY_MODE
+  # LIVE_MODE additionally requires ENABLE_LIVE_TRADING=true in the environment
+  # AND live credentials AND a passing live-gate evaluation.
+  mode: PAPER_MODE
+  loop_interval_seconds: 60
+  # Trade only while the regular session is open (per Tradier market clock).
+  trade_only_when_market_open: true
+  # Skip the first/last N minutes of the session (open/close auction noise).
+  skip_first_minutes: 5
+  skip_last_minutes: 10
+  timezone: America/New_York
+
+universe:
+  benchmark: SPY
+  # Conservative, liquid default universe for paper testing.
+  symbols:
+    - AAPL
+    - MSFT
+    - NVDA
+    - AMZN
+    - GOOGL
+    - META
+    - JPM
+    - XOM
+    - UNH
+    - PG
+    - JNJ
+    - HD
+    - CAT
+    - COST
+    - AVGO
+  sectors:
+    AAPL: technology
+    MSFT: technology
+    NVDA: technology
+    AVGO: technology
+    AMZN: consumer_discretionary
+    HD: consumer_discretionary
+    GOOGL: communication_services
+    META: communication_services
+    JPM: financials
+    XOM: energy
+    UNH: healthcare
+    JNJ: healthcare
+    PG: consumer_staples
+    COST: consumer_staples
+    CAT: industrials
+    SPY: index
+
+market_data:
+  history_days: 400          # calendar days of daily bars requested per symbol
+  min_bars_required: 120     # refuse to trade a symbol with less history
+  quote_staleness_seconds: 90
+  bar_staleness_days: 5
+  cache_ttl_seconds: 30
+  max_quote_age_for_orders_seconds: 30
+
+regime:
+  fast_ma: 50
+  slow_ma: 200
+  slope_lookback: 20
+  atr_period: 14
+  realized_vol_window: 20
+  realized_vol_long_window: 120
+  # Annualised realized volatility thresholds for the benchmark.
+  high_vol_threshold: 0.28
+  low_vol_threshold: 0.12
+  # Sideways when |slope| below this (annualised regression slope of log price).
+  sideways_slope_threshold: 0.05
+  # Risk-off when benchmark drawdown from its 252d high exceeds this.
+  risk_off_drawdown: 0.12
+  # ... or when realized vol spikes above this multiple of its long-run level.
+  risk_off_vol_spike_ratio: 2.0
+  min_bars: 210
+
+strategies:
+  # Base ensemble weights. Must be >= 0. They are normalised at runtime.
+  weights:
+    trend_following: 0.30
+    momentum: 0.25
+    breakout: 0.15
+    mean_reversion: 0.10
+    relative_strength: 0.20
+
+  # Per-regime multipliers applied on top of the base weights. Adaptive
+  # learning may nudge base weights only inside `adaptation` limits below.
+  regime_weight_multipliers:
+    BULL_TREND:      { trend_following: 1.25, momentum: 1.20, breakout: 1.10, mean_reversion: 0.50, relative_strength: 1.10 }
+    BEAR_TREND:      { trend_following: 0.80, momentum: 0.70, breakout: 0.60, mean_reversion: 0.60, relative_strength: 0.80 }
+    SIDEWAYS:        { trend_following: 0.60, momentum: 0.70, breakout: 0.80, mean_reversion: 1.40, relative_strength: 0.90 }
+    HIGH_VOLATILITY: { trend_following: 0.70, momentum: 0.70, breakout: 0.60, mean_reversion: 0.70, relative_strength: 0.80 }
+    LOW_VOLATILITY:  { trend_following: 1.10, momentum: 1.10, breakout: 1.15, mean_reversion: 1.00, relative_strength: 1.05 }
+    RISK_OFF:        { trend_following: 0.30, momentum: 0.30, breakout: 0.20, mean_reversion: 0.30, relative_strength: 0.40 }
+
+  params:
+    trend_following:
+      fast_ma: 20
+      slow_ma: 100
+      atr_period: 14
+      slope_lookback: 20
+      min_bars: 120
+    momentum:
+      lookback: 63
+      skip_recent: 5
+      confirm_lookback: 21
+      min_bars: 120
+    breakout:
+      channel_lookback: 55
+      exit_lookback: 20
+      volume_lookback: 20
+      volume_confirm_ratio: 1.2
+      atr_period: 14
+      min_bars: 120
+    mean_reversion:
+      rsi_period: 14
+      rsi_oversold: 25.0
+      rsi_overbought: 75.0
+      bb_period: 20
+      bb_stdev: 2.0
+      trend_filter_ma: 200
+      min_bars: 210
+    relative_strength:
+      lookback: 63
+      benchmark: SPY
+      min_bars: 120
+
+signals:
+  # Evidence requirements - insufficient or conflicting evidence => no trade.
+  min_abs_score: 0.28            # |OpportunityScore| required to act
+  min_confidence: 55.0           # weighted confidence 0-100
+  min_agreeing_strategies: 2     # strategies pointing the same direction
+  max_conflict_ratio: 0.40       # opposing weight / agreeing weight
+  max_signal_dispersion: 0.75    # stdev of contributing signal values
+  long_only: true                # short selling disabled by default
+  max_new_positions_per_cycle: 2
+
+risk:
+  # ---- per-trade -----------------------------------------------------------
+  max_risk_per_trade_pct: 0.0050       # 0.50% of equity risked per trade
+  max_position_pct: 0.08               # 8% of equity in a single position
+  min_position_notional: 500.0
+  min_shares: 1
+  reward_risk_min: 1.8                 # required take-profit / stop ratio
+  # ---- portfolio -----------------------------------------------------------
+  max_portfolio_exposure_pct: 0.60     # gross exposure cap (fraction of equity)
+  max_sector_exposure_pct: 0.25
+  max_correlated_exposure_pct: 0.30    # exposure to a correlated cluster
+  correlation_threshold: 0.70
+  correlation_lookback: 90
+  max_open_positions: 8
+  max_new_risk_per_day_pct: 0.02       # sum of per-trade risk opened per day
+  # ---- loss limits (fractions of equity) ----------------------------------
+  max_daily_loss_pct: 0.02
+  max_weekly_loss_pct: 0.04
+  max_drawdown_pct: 0.12               # from portfolio high-water mark
+  # ---- liquidity / microstructure -----------------------------------------
+  min_avg_dollar_volume: 20000000.0    # 20M USD / day, 20d average
+  max_spread_bps: 25.0                 # 0.25% of mid
+  max_position_pct_of_adv: 0.02        # never exceed 2% of avg daily volume
+  min_price: 5.0
+  max_price: 100000.0
+  # ---- volatility filter ---------------------------------------------------
+  max_atr_pct: 0.08                    # reject symbols with ATR > 8% of price
+  min_atr_pct: 0.005
+  volatility_target_annual: 0.15       # portfolio-level vol target for sizing
+  # ---- stops / targets -----------------------------------------------------
+  atr_period: 14
+  atr_stop_multiple: 2.5
+  atr_target_multiple: 5.0
+  trailing_stop_atr_multiple: 3.0
+  trailing_activate_r: 1.0             # start trailing after +1R
+  max_stop_distance_pct: 0.15
+  time_stop_days: 40                   # exit if thesis has not worked out
+  # ---- drawdown tiers (exposure MUST fall as drawdown grows) ---------------
+  drawdown_tiers:
+    - { name: NORMAL,     min_drawdown: 0.000, size_multiplier: 1.00, min_confidence: 55.0, allow_new_positions: true }
+    - { name: CAUTION,    min_drawdown: 0.030, size_multiplier: 0.70, min_confidence: 60.0, allow_new_positions: true }
+    - { name: DEFENSIVE,  min_drawdown: 0.060, size_multiplier: 0.40, min_confidence: 72.0, allow_new_positions: true }
+    - { name: LOCKDOWN,   min_drawdown: 0.090, size_multiplier: 0.00, min_confidence: 100.0, allow_new_positions: false }
+    - { name: EMERGENCY,  min_drawdown: 0.120, size_multiplier: 0.00, min_confidence: 100.0, allow_new_positions: false }
+  # ---- cooldowns -----------------------------------------------------------
+  consecutive_loss_cooldown:
+    losses_to_trigger: 3
+    cooldown_minutes: 240
+  symbol_cooldown_minutes_after_loss: 1440
+  symbol_cooldown_minutes_after_exit: 60
+  # ---- hard prohibitions (not configurable off) ---------------------------
+  # Averaging down and risk-increase-to-recover are refused in code.
+
+execution:
+  default_duration: day
+  entry_order_type: limit              # market | limit
+  limit_offset_bps: 10.0               # marketable limit offset from the ask/bid
+  use_bracket_orders: true             # OTOCO entry + stop + target when supported
+  order_ack_timeout_seconds: 20
+  order_poll_interval_seconds: 2
+  max_submit_retries: 2
+  duplicate_order_window_seconds: 300
+  cancel_unfilled_after_seconds: 300
+  slippage_alert_bps: 30.0
+  commission_per_share: 0.0            # Tradier equities: $0 commission
+  commission_minimum: 0.0
+
+backtest:
+  initial_equity: 100000.0
+  commission_per_share: 0.0
+  commission_minimum: 0.0
+  slippage_bps: 5.0                    # applied against you on every fill
+  spread_bps: 4.0                      # half-spread cost on entry and exit
+  fill_model: next_open                # signal on bar close, fill next bar open
+  allow_partial_fills: false
+  volume_participation_cap: 0.05       # max % of a bar's volume you can take
+
+live_gate:
+  # LIVE is refused until every criterion below is met. Evaluation is manual:
+  # the system never flips itself to LIVE.
+  enabled: false
+  min_paper_trades: 200
+  min_paper_days: 60
+  max_paper_drawdown_pct: 0.10
+  min_expectancy_r: 0.05
+  min_profit_factor: 1.3
+  min_win_rate: 0.35
+  min_sharpe: 0.8
+  require_health_checks: true
+
+adaptation:
+  # Strategy weights may drift with realised performance, but only inside a
+  # narrow band around the configured base weights. Never self-modifying code.
+  enabled: true
+  lookback_trades: 50
+  min_trades_per_strategy: 20
+  max_weight_delta: 0.10       # absolute deviation from the configured weight
+  min_weight: 0.02
+  max_weight: 0.50
+  update_interval_hours: 24
+
+monitoring:
+  snapshot_interval_seconds: 300
+  alert_daily_loss_pct: 0.015
+  alert_drawdown_pct: 0.05
+  alert_slippage_bps: 30.0
+  heartbeat_timeout_seconds: 300
