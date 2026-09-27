@@ -1,0 +1,20 @@
+{
+  "name": "mi-po-effect",
+  "version": "1.0.0",
+  "description": "TikTok Effect House effect: מי פה? 👀",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "build:preview": "esbuild preview/src/main.ts --bundle --format=iife --target=es2019 --outfile=preview/app.js",
+    "check": "npm run typecheck && npm test && npm run build:preview",
+    "check:preview": "npm run build:preview && node tools/preview-check.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.56.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  },
+  "private": true
+}

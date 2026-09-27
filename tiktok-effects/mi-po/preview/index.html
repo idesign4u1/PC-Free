@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מי פה? 👀 · Preview</title>
+<style>
+  @font-face { font-family: 'Heebo'; font-weight: 900; src: url('../Assets/Fonts/Heebo-Black.ttf') format('truetype'); font-display: block; }
+  @font-face { font-family: 'Heebo'; font-weight: 500; src: url('../Assets/Fonts/Heebo-Medium.ttf') format('truetype'); font-display: block; }
+
+  :root {
+    --bg: #0b0a12;
+    --panel: #16141f;
+    --ink: #f4f2fa;
+    --muted: #a39fb4;
+    --line: #2a2738;
+  }
+  :root[data-theme="light"] { --bg: #f3f1f8; --panel: #ffffff; --ink: #18161f; --muted: #5d586c; --line: #dcd8e6; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg: #f3f1f8; --panel: #ffffff; --ink: #18161f; --muted: #5d586c; --line: #dcd8e6; }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Heebo', system-ui, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 16px;
+    min-height: 100dvh;
+  }
+
+  /* 9:16 phone frame */
+  #frame {
+    --accent: rgb(140, 217, 255);
+    position: relative;
+    width: min(100%, calc((100dvh - 110px) * 9 / 16), 460px);
+    aspect-ratio: 9 / 16;
+    border-radius: 22px;
+    overflow: hidden;
+    background: #1b1726;
+    box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+  }
+  #camera { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+  #frame.has-camera #camera { display: block; }
+  #frame.has-camera #demo { display: none; }
+  #demo { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  #stage { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: 0 0; cursor: pointer; }
+  .node { position: absolute; transform: translate(-50%, -50%); visibility: hidden; will-change: transform, opacity; pointer-events: none; }
+
+  .overlay { width: 1080px; height: 1920px; background: url('../Assets/Textures/BackgroundOverlay.png') center / 100% 100%; }
+  .flash { width: 1080px; height: 1920px; background: #fff; }
+
+  .emoji-font { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+
+  .intro-title, .intro-subtitle, .question-text, .countdown, .now, .tap-hint, .branding, .question-emoji, .burst {
+    font-family: 'Heebo', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+    white-space: nowrap; text-align: center; color: #fff; line-height: 1;
+  }
+  .intro-title { font-size: 150px; font-weight: 900; letter-spacing: -2px;
+    text-shadow: 0 6px 0 rgba(0,0,0,.18), 0 0 40px rgba(255, 64, 140, .55), 0 10px 30px rgba(0,0,0,.45); }
+  .intro-subtitle { font-size: 62px; font-weight: 500; padding: 18px 40px; border-radius: 999px;
+    background: rgba(20, 14, 40, .45); border: 2px solid rgba(255,255,255,.22); text-shadow: 0 2px 10px rgba(0,0,0,.5); }
+
+  .card { width: 916px; height: 476px; background: url('../Assets/Textures/QuestionCard.png') center / 100% 100%; }
+  .card-glow { width: 1012px; height: 572px; }
+  .tint { background: var(--accent); -webkit-mask: var(--mask) center / 100% 100% no-repeat; mask: var(--mask) center / 100% 100% no-repeat; mix-blend-mode: screen; }
+  .card-glow { --mask: url('../Assets/Textures/CardGlow.png'); }
+  .countdown-glow { --mask: url('../Assets/Textures/RadialGlow.png'); width: 760px; height: 760px; }
+
+  .question-text { left: 50%; top: 50%; visibility: visible; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 92px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px;
+    text-shadow: 0 3px 0 rgba(0,0,0,.25), 0 6px 24px rgba(0,0,0,.45); }
+  .question-emoji { font-size: 124px; filter: drop-shadow(0 8px 14px rgba(0,0,0,.35)); }
+
+  .countdown { font-size: 400px; font-weight: 900; color: var(--accent); letter-spacing: -8px;
+    -webkit-text-stroke: 10px rgba(255,255,255,.95); paint-order: stroke fill;
+    text-shadow: 0 0 60px var(--accent), 0 16px 40px rgba(0,0,0,.4); }
+  .now { font-size: 168px; font-weight: 900; color: #fff;
+    text-shadow: 0 0 40px var(--accent), 0 0 90px var(--accent), 0 10px 26px rgba(0,0,0,.5); }
+  .burst { font-size: 92px; }
+  .tap-hint { font-size: 46px; font-weight: 500; padding: 16px 34px; border-radius: 999px;
+    background: rgba(20, 14, 40, .5); border: 2px solid rgba(255,255,255,.25); text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .branding { font-size: 28px; font-weight: 500; letter-spacing: 1.5px; text-shadow: 0 1px 6px rgba(0,0,0,.6); direction: ltr; }
+
+  /* TikTok UI safe-area guides */
+  .safe { position: absolute; pointer-events: none; display: none; background: rgba(255, 40, 80, .22); outline: 2px dashed rgba(255, 90, 120, .9); outline-offset: -2px; }
+  .show-safe .safe { display: block; }
+  .safe.top { left: 0; right: 0; top: 0; height: 12%; }
+  .safe.bottom { left: 0; right: 0; bottom: 0; height: 20%; }
+  .safe.right { right: 0; top: 35%; height: 45%; width: 15%; }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .toolbar button {
+    font: 500 14px 'Heebo', system-ui, sans-serif; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer;
+  }
+  .toolbar button[aria-pressed="true"] { border-color: #ff4f8b; }
+  .hint { font-size: 13px; color: var(--muted); text-align: center; margin: 0; }
+</style>
+</head>
+<body data-assets="../Assets/">
+  <div id="frame">
+    <video id="camera" playsinline muted></video>
+    <!-- Demo backdrop: two stylized "people" so face coverage can be judged without a camera. -->
+    <svg id="demo" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3350"/><stop offset="1" stop-color="#171320"/></linearGradient>
+        <radialGradient id="lamp" cx="0.75" cy="0.2" r="0.6"><stop offset="0" stop-color="#ffcf9a" stop-opacity=".45"/><stop offset="1" stop-color="#ffcf9a" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect width="1080" height="1920" fill="url(#room)"/>
+      <rect width="1080" height="1920" fill="url(#lamp)"/>
+      <g fill="#c99a7c"><ellipse cx="330" cy="880" rx="150" ry="185"/><ellipse cx="760" cy="840" rx="145" ry="180"/></g>
+      <g fill="#3a2a22"><path d="M180 850 Q190 640 330 630 Q480 640 480 860 Q440 720 330 715 Q220 720 180 850Z"/><path d="M615 810 Q630 610 760 600 Q905 610 905 820 Q870 690 760 684 Q650 690 615 810Z"/></g>
+      <g fill="#2b2f4a"><path d="M90 1920 Q110 1150 330 1110 Q560 1150 590 1920Z"/></g>
+      <g fill="#6b2f4a"><path d="M500 1920 Q520 1100 760 1060 Q1000 1100 1020 1920Z"/></g>
+      <text x="540" y="1840" fill="#ffffff" fill-opacity=".35" font-size="34" text-anchor="middle" font-family="Heebo, sans-serif">תצוגה מקדימה · אזור הפנים</text>
+    </svg>
+    <div id="stage"></div>
+    <div class="safe top"></div><div class="safe right"></div><div class="safe bottom"></div>
+  </div>
+  <div class="toolbar">
+    <button id="btn-camera" type="button">📷 הפעלת מצלמה</button>
+    <button id="btn-safe" type="button" aria-pressed="false">📐 אזורי UI של טיקטוק</button>
+    <button id="btn-sound" type="button">🔊 סאונד פעיל</button>
+  </div>
+  <p class="hint">נגיעה במסך (או רווח) לשאלה הבאה · אותה לוגיקה בדיוק כמו בסקריפט של Effect House</p>
+  <script src="app.js"></script>
+</body>
+</html>
