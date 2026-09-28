@@ -66,7 +66,7 @@
 
 ### 3. חיבור ה-GameManager
 באינספקטור של GameManager גררו כל אובייקט לשדה שלו:
-`backgroundOverlay, introTitle, introSubtitle, questionCard, cardGlow, questionText, questionEmoji, countdownText, countdownGlow, nowText, flash, burstParticles (10 הפריטים), tapHint, branding, sfxWhoosh, sfxTick, sfxNow`.
+`backgroundOverlay, introTitle, introSubtitle, questionCard, cardGlow, questionText, questionEmoji, countdownText, countdownGlow, nowText, flash, fxContainer (האובייקט שמכיל את 10 האימוג׳י; הילדים שלו נמצאים אוטומטית), tapHint, branding, sfxWhoosh, sfxTick, sfxNow`.
 
 כל שדה אופציונלי: אובייקט שלא חובר פשוט לא יונפש (בלי שגיאות). לכן אפשר להתחיל רק עם `questionCard` + `questionText` + `countdownText` ולהוסיף את השאר בהדרגה.
 

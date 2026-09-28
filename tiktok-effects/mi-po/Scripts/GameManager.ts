@@ -8,7 +8,7 @@
 import { COPY, TIMING } from './GameConfig';
 import { GameFlow, GameView, SoundCue } from './GameFlow';
 import { QUESTIONS } from './Questions';
-import { SceneNode, SoundPlayer } from './SceneNode';
+import { getChildren, SceneNode, SoundPlayer } from './SceneNode';
 import { formatForRenderer, HebrewRenderMode } from './TextLayout';
 
 @component()
@@ -25,7 +25,8 @@ export class GameManager extends APJS.BasicScriptComponent {
   @serializeProperty() countdownGlow: APJS.SceneObject | null = null;
   @serializeProperty() nowText: APJS.SceneObject | null = null;
   @serializeProperty() flash: APJS.SceneObject | null = null;
-  @serializeProperty() burstParticles: APJS.SceneObject[] = [];
+  /** Parent of the burst emoji Text objects — its children are used automatically. */
+  @serializeProperty() fxContainer: APJS.SceneObject | null = null;
   @serializeProperty() tapHint: APJS.SceneObject | null = null;
   @serializeProperty() branding: APJS.SceneObject | null = null;
 
@@ -70,7 +71,7 @@ export class GameManager extends APJS.BasicScriptComponent {
       tapHint: node(this.tapHint),
       branding: node(this.branding, false),
     };
-    this.burstNodes = (this.burstParticles || []).map((obj) => node(obj));
+    this.burstNodes = getChildren(this.fxContainer).map((obj) => new SceneNode(obj, unit));
 
     if (this.soundEnabled) {
       this.sounds = {

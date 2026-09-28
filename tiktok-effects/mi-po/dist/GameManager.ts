@@ -1128,6 +1128,54 @@ class SceneNode {
   }
 }
 
+/**
+ * Returns the direct children of a SceneObject. APJS exposes children differently across
+ * versions (on the object or on its transform), so each known shape is tried in turn.
+ */
+function getChildren(object: AnyObj | null | undefined): AnyObj[] {
+  if (!object) return [];
+  const toObject = (c: AnyObj | null): AnyObj | null => {
+    if (!c) return null;
+    if (typeof c.getComponent === 'function') return c;
+    if (typeof c.getSceneObject === 'function') return c.getSceneObject();
+    if (c.sceneObject) return c.sceneObject;
+    return null;
+  };
+  const collect = (holder: AnyObj | null): AnyObj[] => {
+    if (!holder) return [];
+    try {
+      const list = typeof holder.getChildren === 'function' ? holder.getChildren() : holder.children;
+      if (list && typeof list.length === 'number') {
+        const out: AnyObj[] = [];
+        for (let i = 0; i < list.length; i++) {
+          const o = toObject(list[i]);
+          if (o) out.push(o);
+        }
+        if (out.length) return out;
+      }
+    } catch (_) { /* not supported */ }
+    try {
+      const count = typeof holder.getChildCount === 'function' ? holder.getChildCount() : holder.childCount;
+      if (typeof count === 'number' && typeof holder.getChild === 'function') {
+        const out: AnyObj[] = [];
+        for (let i = 0; i < count; i++) {
+          const o = toObject(holder.getChild(i));
+          if (o) out.push(o);
+        }
+        return out;
+      }
+    } catch (_) { /* not supported */ }
+    return [];
+  };
+  const direct = collect(object);
+  if (direct.length) return direct;
+  for (const type of TRANSFORM_TYPES) {
+    const viaTransform = collect(tryGetComponent(object, type));
+    if (viaTransform.length) return viaTransform;
+  }
+  return [];
+}
+
 /** Plays a one-shot sound from an Audio object, if one is assigned. */
 class SoundPlayer {
   private readonly audio: AnyObj | null;
@@ -1169,7 +1217,8 @@ export class GameManager extends APJS.BasicScriptComponent {
   @serializeProperty() countdownGlow: APJS.SceneObject | null = null;
   @serializeProperty() nowText: APJS.SceneObject | null = null;
   @serializeProperty() flash: APJS.SceneObject | null = null;
-  @serializeProperty() burstParticles: APJS.SceneObject[] = [];
+  /** Parent of the burst emoji Text objects — its children are used automatically. */
+  @serializeProperty() fxContainer: APJS.SceneObject | null = null;
   @serializeProperty() tapHint: APJS.SceneObject | null = null;
   @serializeProperty() branding: APJS.SceneObject | null = null;
 
@@ -1214,7 +1263,7 @@ export class GameManager extends APJS.BasicScriptComponent {
       tapHint: node(this.tapHint),
       branding: node(this.branding, false),
     };
-    this.burstNodes = (this.burstParticles || []).map((obj) => node(obj));
+    this.burstNodes = getChildren(this.fxContainer).map((obj) => new SceneNode(obj, unit));
 
     if (this.soundEnabled) {
       this.sounds = {
