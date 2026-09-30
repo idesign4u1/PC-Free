@@ -1,0 +1,290 @@
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">תוכן עניינים</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li><a href="#what-changes">מה בעצם משתנה ב-Gemini</a></li>
+<li><a href="#timeline">ציר הזמן: המועדים שחשוב לסמן ביומן</a></li>
+<li><a href="#gems-vs-skills">מה ההבדל בין Gems ל-Skills</a></li>
+<li><a href="#comparison">טבלת השוואה: Gems מול Skills</a></li>
+<li><a href="#skill-chaining">שרשור מיומנויות: איך זה נראה בפועל</a></li>
+<li><a href="#free-tier">מה עם המשתמשים בגרסה החינמית</a></li>
+<li><a href="#prepare">איך להתכונן למעבר: צעדים מעשיים</a></li>
+<li><a href="#faq">שאלות נפוצות</a></li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">בקצרה</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li>גוגל מחליפה ב-Gemini את ה-Gems, הצ'אטבוטים המותאמים אישית, במערכת מודולרית בשם Skills.</li>
+<li>מ-13 באוקטובר 2026 לא ניתן יהיה ליצור Gems חדשים או לערוך Gems קיימים.</li>
+<li>מ-17 בנובמבר 2026 גוגל מתחילה להמיר אוטומטית את ה-Gems הקיימים ל-Skills בחשבונות אישיים. חשבונות עבודה ולימודים יעברו ב-2027.</li>
+<li>Skills מופעלים ישירות בתוך השיחה בהקלדת לוכסן (/), בלי לעבור לשיחה נפרדת.</li>
+<li>אפשר לשרשר כמה Skills באותה שיחה ובאותו חלון הקשר, צעד משמעותי לעבר תהליכי עבודה אג'נטיים.</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>מי שבנה לעצמו ב-<strong>גוגל ג'מיני</strong> אוסף של Gems, עוזר לכתיבת פוסטים, מתרגם קבוע, בודק קוד, צריך להתכונן לשינוי. גוגל הודיעה שהיא נפרדת מ-Gems ועוברת למערכת חדשה בשם <strong>Gemini Skills</strong>. על פניו זה נשמע כמו החלפת שם, אבל מאחורי המהלך עומד שינוי בדרך שבה עובדים עם Gemini: במקום לקפוץ בין צ'אטבוטים נפרדים, מפעילים מיומנויות בתוך השיחה עצמה, ואפילו כמה מהן ברצף. במדריך הזה נסביר מה משתנה, מתי, מה ההבדל בפועל, ומה כדאי לעשות כבר עכשיו כדי שהמעבר לא יתפוס אתכם לא מוכנים.</p>
+<!-- /wp:paragraph -->
+
+<!-- IMG1_START -->
+<!-- wp:image {"id":IMAGE_ID_1,"sizeSlug":"large","linkDestination":"none"} -->
+<figure class="wp-block-image size-large"><img class="wp-image-IMAGE_ID_1" src="IMAGE_URL_1" alt="IMAGE_ALT_1" /><figcaption class="wp-element-caption">גוגל עוברת ב-Gemini מצ'אטבוטים מבודדים למיומנויות שעובדות בתוך השיחה</figcaption></figure>
+<!-- /wp:image -->
+<!-- IMG1_END -->
+
+<!-- wp:heading {"level":2,"anchor":"what-changes"} -->
+<h2 class="wp-block-heading" id="what-changes">מה בעצם משתנה ב-Gemini</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Gems הושקו כדרך לתת ל-Gemini הוראות קבועות. יוצרים Gem, כותבים לו הנחיית מערכת (System Prompt), למשל "אתה עורך תוכן שכותב בעברית פשוטה וקצרה", ומאותו רגע כל שיחה איתו מתנהלת לפי ההנחיה הזו. זה עבד טוב, אבל עם מגבלה ברורה: כל Gem הוא עולם סגור. כדי להשתמש בו צריך לפתוח את לוח הצד, למצוא את מנהל ה-Gems, לבחור את ה-Gem הנכון ולפתוח שיחה חדשה.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Skills משנים את ההיגיון. גוגל מגדירה אותם כהוראות מותאמות אישית שאפשר להשתמש בהן שוב ושוב ולשלב זו בזו. במקום צ'אטבוט נפרד, כל Skill הוא רכיב קטן, מעין Micro-prompt, שמופעל בתוך השיחה השוטפת. המטרה זהה, לתת ל-Gemini הוראות קבועות, אבל הגישה אליהן מהירה בהרבה והן יכולות לעבוד יחד. זה חלק ממגמה רחבה יותר בתעשייה: מעבר מצ'אטבוטים שעונים על שאלות למערכות שמבצעות תהליכי עבודה שלמים, מה שמכונה Agentic Workflows.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2,"anchor":"timeline"} -->
+<h2 class="wp-block-heading" id="timeline">ציר הזמן: המועדים שחשוב לסמן ביומן</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>גוגל פרסמה לוח זמנים מסודר למעבר. הנה מה שקורה ומתי:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table>
+<thead><tr><th>תאריך</th><th>מה קורה</th><th>מה זה אומר לכם</th></tr></thead>
+<tbody>
+<tr><td>13 באוקטובר 2026</td><td>נחסמת האפשרות ליצור Gems חדשים ולערוך Gems קיימים</td><td>אם יש Gem שאתם רוצים לשפר, עשו את זה לפני התאריך</td></tr>
+<tr><td>עד המעבר</td><td>Gems קיימים ממשיכים לעבוד</td><td>אפשר להמשיך להשתמש בהם כרגיל</td></tr>
+<tr><td>17 בנובמבר 2026</td><td>תחילת פריסת Skills והמרה אוטומטית של Gems בחשבונות Google אישיים</td><td>ה-Gems שלכם יהפכו ל-Skills בלי שתצטרכו לעשות דבר</td></tr>
+<tr><td>2027</td><td>המעבר בחשבונות עבודה ולימודים (Google Workspace)</td><td>ארגונים מקבלים זמן נוסף להיערך</td></tr>
+</tbody>
+</table></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>הנקודה החשובה: ההמרה אוטומטית. גוגל לא מבקשת מהמשתמשים לבנות מחדש את ה-Gems שלהם. מי שרוצה יכול ליצור את ה-Skills ידנית, אבל זה לא חובה.</p>
+<!-- /wp:paragraph -->
+
+<!-- IMG2_START -->
+<!-- wp:image {"id":IMAGE_ID_2,"sizeSlug":"large","linkDestination":"none"} -->
+<figure class="wp-block-image size-large"><img class="wp-image-IMAGE_ID_2" src="IMAGE_URL_2" alt="IMAGE_ALT_2" /><figcaption class="wp-element-caption">מ-13 באוקטובר לא ניתן יהיה ליצור או לערוך Gems, ומ-17 בנובמבר מתחילה ההמרה ל-Skills</figcaption></figure>
+<!-- /wp:image -->
+<!-- IMG2_END -->
+
+<!-- wp:heading {"level":2,"anchor":"gems-vs-skills"} -->
+<h2 class="wp-block-heading" id="gems-vs-skills">מה ההבדל בין Gems ל-Skills</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>עד היום, מי שרצה להשתמש ב-Gem ייעודי, לתכנות, לעריכת תוכן או לתרגום, עבר לשיחה (Thread) נפרדת לגמרי. השיחה הזו התבססה על הנחיית מערכת קבועה, וכל מה שנאמר בשיחה הראשית נשאר מאחור. אם באמצע עבודה על מסמך רציתם שה-Gem של התרגום ייכנס לפעולה, הייתם צריכים להעתיק את הטקסט, לעבור ל-Gem ולהדביק.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>ב-Skills זה עובד אחרת, בשלוש דרכים עיקריות:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list -->
+<ul class="wp-block-list">
+<li><strong>עבודה בתוך השיחה הרגילה:</strong> ה-Skill פועל בצ'אט השוטף. לא צריך לפתוח סביבה נפרדת, וההקשר של השיחה נשמר.</li>
+<li><strong>הפעלה בלוכסן:</strong> מקלידים / בשורת הפקודה ובוחרים את ה-Skill הרלוונטי מהרשימה, בדיוק כמו פקודות בכלים כמו Slack או Notion.</li>
+<li><strong>שרשור מיומנויות (Skill Chaining):</strong> אפשר להפעיל כמה Skills שונים באותה שיחה ובאותו חלון הקשר (Context Window), כך שכל שלב נשען על התוצאה של השלב הקודם.</li>
+</ul>
+<!-- /wp:list -->
+
+<!-- wp:heading {"level":2,"anchor":"comparison"} -->
+<h2 class="wp-block-heading" id="comparison">טבלת השוואה: Gems מול Skills ב-Gemini</h2>
+<!-- /wp:heading -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table>
+<thead><tr><th>פרמטר</th><th>Gems</th><th>Skills</th></tr></thead>
+<tbody>
+<tr><td>מבנה</td><td>צ'אטבוט מותאם אישית ונפרד</td><td>רכיב הוראות מודולרי (Micro-prompt)</td></tr>
+<tr><td>איפה עובדים איתו</td><td>בשיחה נפרדת</td><td>בתוך השיחה השוטפת</td></tr>
+<tr><td>איך מפעילים</td><td>לוח צד, מנהל Gems, בחירה ופתיחת שיחה</td><td>הקלדת / ובחירה מהרשימה</td></tr>
+<tr><td>שילוב כמה יכולות</td><td>לא ניתן, Gem אחד בכל שיחה</td><td>ניתן לשרשר כמה Skills ברצף</td></tr>
+<tr><td>הקשר השיחה</td><td>מתחיל מאפס בכל Gem</td><td>נשמר לאורך כל השרשרת</td></tr>
+<tr><td>יצירה ועריכה</td><td>נחסמות מ-13 באוקטובר 2026</td><td>זמינות עם תחילת הפריסה</td></tr>
+<tr><td>סוג עבודה מתאים</td><td>משימה אחת מוגדרת</td><td>תהליכי עבודה מרובי שלבים</td></tr>
+</tbody>
+</table></figure>
+<!-- /wp:table -->
+
+<!-- IMG3_START -->
+<!-- wp:image {"id":IMAGE_ID_3,"sizeSlug":"large","linkDestination":"none"} -->
+<figure class="wp-block-image size-large"><img class="wp-image-IMAGE_ID_3" src="IMAGE_URL_3" alt="IMAGE_ALT_3" /><figcaption class="wp-element-caption">Skills מופעלים בהקלדת לוכסן, ישירות מתוך שורת הפקודה</figcaption></figure>
+<!-- /wp:image -->
+<!-- IMG3_END -->
+
+<!-- wp:heading {"level":2,"anchor":"skill-chaining"} -->
+<h2 class="wp-block-heading" id="skill-chaining">שרשור מיומנויות: איך זה נראה בפועל</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>היכולת לשרשר Skills היא הסיבה האמיתית לשינוי. קחו לדוגמה מנהלת שיווק שמקבלת קובץ נתונים של קמפיין. בעולם של Gems היא הייתה עוברת בין שלושה צ'אטבוטים ומעתיקה טקסט ביניהם. עם Skills התהליך נראה כך:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li>מעלה את הקובץ ומפעילה Skill לניתוח נתונים, שמזהה אילו מודעות הביאו הכי הרבה המרות.</li>
+<li>באותה שיחה מפעילה Skill לסיכום והפקת תובנות, שהופך את הממצאים לשלוש המלצות ברורות.</li>
+<li>מסיימת עם Skill לעיצוב, שמסדר את התוצאה בטבלה מוכנה להצגה בישיבת צוות.</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>כל השלבים קורים באותו חלון הקשר. ה-Skill השני יודע מה ה-Skill הראשון מצא, והשלישי עובד על התוצאה של השני. זה ההבדל בין צ'אטבוט שעונה על שאלה לבין תהליך עבודה אג'נטי, שבו המערכת מבצעת רצף של משימות לקראת מטרה אחת. מפתחים יכולים לעשות את אותו דבר עם Skill לכתיבת קוד, Skill לבדיקת באגים ו-Skill לכתיבת תיעוד, הכל ברצף אחד.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>גוגל לא לבד בכיוון הזה. גם Claude של Anthropic ו-ChatGPT של OpenAI פיתחו מנגנונים של מיומנויות, סוכנים וכלים שניתנים לשילוב. אם אתם כבר עובדים עם כלים כאלה, תוכלו לקרוא איך זה נראה בעבודה יומיומית במאמר שלנו על <a href="https://aisolution.co.il/social-media-management-claude-ai/">ניהול סושיאל מדיה עם Claude AI</a>.</p>
+<!-- /wp:paragraph -->
+
+<!-- IMG4_START -->
+<!-- wp:image {"id":IMAGE_ID_4,"sizeSlug":"large","linkDestination":"none"} -->
+<figure class="wp-block-image size-large"><img class="wp-image-IMAGE_ID_4" src="IMAGE_URL_4" alt="IMAGE_ALT_4" /><figcaption class="wp-element-caption">שרשור מיומנויות מאפשר לנתח נתונים, לסכם ולעצב טבלה באותה שיחה</figcaption></figure>
+<!-- /wp:image -->
+<!-- IMG4_END -->
+
+<!-- wp:heading {"level":2,"anchor":"free-tier"} -->
+<h2 class="wp-block-heading" id="free-tier">מה עם המשתמשים בגרסה החינמית</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>זו השאלה שמעסיקה את הקהילה יותר מכל. ההודעה של גוגל עוררה חשש שהמעבר ל-Skills ישמש הזדמנות להגביל את הגרסה החינמית (Free Tier), למשל במספר ה-Skills שאפשר לשמור או בשרשור מיומנויות. נכון לעכשיו גוגל לא פרסמה פירוט של מגבלות כאלה, והתיעוד הרשמי מדבר על מעבר של כל החשבונות האישיים בנובמבר.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>ההמלצה שלנו: לא להיבהל, אבל גם לא להניח שהכל יישאר בדיוק כמו שהיה. כלי AI חינמיים משנים את התנאים שלהם לעתים קרובות, ומי שבנה תהליכי עבודה חשובים על גבי Gems צריך לגבות את ההנחיות שלו ולעקוב אחרי העדכונים של גוגל בשבועות הקרובים.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2,"anchor":"prepare"} -->
+<h2 class="wp-block-heading" id="prepare">איך להתכונן למעבר: צעדים מעשיים</h2>
+<!-- /wp:heading -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list">
+<li><strong>עשו רשימה של ה-Gems שלכם:</strong> פתחו את מנהל ה-Gems ורשמו אילו מהם אתם באמת משתמשים. חלק כנראה כבר לא רלוונטיים.</li>
+<li><strong>גבו את ההנחיות:</strong> העתיקו את הנחיית המערכת של כל Gem חשוב למסמך נפרד. ההמרה אמורה להיות אוטומטית, אבל גיבוי לא עולה כלום.</li>
+<li><strong>ערכו לפני 13 באוקטובר:</strong> אם יש Gem שרציתם לשפר, זה הזמן. אחרי התאריך הזה העריכה נחסמת.</li>
+<li><strong>פרקו Gems גדולים:</strong> Gem שעושה חמישה דברים יעבוד טוב יותר כחמישה Skills קטנים שאפשר לשרשר. חשבו מראש איך לחלק אותו.</li>
+<li><strong>ארגונים, תכננו ל-2027:</strong> אם אתם עובדים עם Google Workspace, יש לכם זמן, אבל כדאי להתחיל למפות תהליכי עבודה שנשענים על Gems.</li>
+</ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph -->
+<p>המעבר מ-Gems ל-Skills הוא עוד סימן לכך שכלי AI הופכים מצ'אטבוטים לעוזרים שמבצעים עבודה. מי שילמד לחשוב במונחים של מיומנויות קטנות שמתחברות לתהליך, ירוויח הכי הרבה מהשינוי. על ההשפעה הרחבה של המגמה הזו על עולם העבודה כתבנו ב<a href="https://aisolution.co.il/impact-of-ai-on-the-job-market/">מהפכת ה-AI ושוק העבודה ב-2026</a>.</p>
+<!-- /wp:paragraph -->
+
+<!-- IMG5_START -->
+<!-- wp:image {"id":IMAGE_ID_5,"sizeSlug":"large","linkDestination":"none"} -->
+<figure class="wp-block-image size-large"><img class="wp-image-IMAGE_ID_5" src="IMAGE_URL_5" alt="IMAGE_ALT_5" /><figcaption class="wp-element-caption">גיבוי ההנחיות ופירוק Gems גדולים ל-Skills קטנים יקלו על המעבר</figcaption></figure>
+<!-- /wp:image -->
+<!-- IMG5_END -->
+
+<!-- wp:heading {"level":2,"anchor":"faq"} -->
+<h2 class="wp-block-heading" id="faq">שאלות נפוצות</h2>
+<!-- /wp:heading -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">מה קורה ל-Gems שכבר יצרתי?</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>הם ממשיכים לעבוד עד המעבר. החל מ-17 בנובמבר 2026 גוגל ממירה אותם אוטומטית ל-Skills בחשבונות אישיים, בלי שתצטרכו לעשות דבר.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">עד מתי אפשר ליצור Gems חדשים?</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>עד 13 באוקטובר 2026. מהתאריך הזה נחסמות יצירה ועריכה של Gems.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">איך מפעילים Skill ב-Gemini?</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>מקלידים לוכסן (/) בשורת הפקודה ובוחרים את ה-Skill הרצוי מהרשימה. ה-Skill פועל בתוך השיחה הנוכחית.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">מה זה שרשור מיומנויות (Skill Chaining)?</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>היכולת להפעיל כמה Skills ברצף באותה שיחה ובאותו חלון הקשר, כך שכל Skill עובד על התוצאה של הקודם. למשל ניתוח נתונים, אחריו סיכום תובנות ואחריו עיצוב טבלה.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">האם המעבר חל גם על חשבונות Google Workspace?</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>כן, אבל מאוחר יותר. חשבונות עבודה ולימודים יעברו ל-Skills במהלך 2027, אחרי החשבונות האישיים.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">האם Skills יהיו זמינים בגרסה החינמית של Gemini?</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>גוגל מתכננת להעביר את כל החשבונות האישיים ל-Skills, ונכון לעכשיו לא פרסמה מגבלות ייחודיות לגרסה החינמית. כדאי לעקוב אחרי העדכונים הרשמיים לקראת נובמבר.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "מה קורה ל-Gems שכבר יצרתי ב-Gemini?",
+      "acceptedAnswer": {"@type": "Answer", "text": "ה-Gems ממשיכים לעבוד עד המעבר. החל מ-17 בנובמבר 2026 גוגל ממירה אותם אוטומטית ל-Skills בחשבונות אישיים, בלי שהמשתמש צריך לעשות דבר."}
+    },
+    {
+      "@type": "Question",
+      "name": "עד מתי אפשר ליצור Gems חדשים ב-Gemini?",
+      "acceptedAnswer": {"@type": "Answer", "text": "עד 13 באוקטובר 2026. מהתאריך הזה גוגל חוסמת יצירה ועריכה של Gems ב-Gemini."}
+    },
+    {
+      "@type": "Question",
+      "name": "איך מפעילים Skill ב-Gemini?",
+      "acceptedAnswer": {"@type": "Answer", "text": "מקלידים לוכסן (/) בשורת הפקודה של Gemini ובוחרים את ה-Skill הרצוי מהרשימה. ה-Skill פועל בתוך השיחה הנוכחית, בלי לפתוח שיחה נפרדת."}
+    },
+    {
+      "@type": "Question",
+      "name": "מה זה שרשור מיומנויות (Skill Chaining) ב-Gemini?",
+      "acceptedAnswer": {"@type": "Answer", "text": "שרשור מיומנויות הוא היכולת להפעיל כמה Skills ברצף באותה שיחה ובאותו חלון הקשר ב-Gemini, כך שכל Skill עובד על התוצאה של הקודם. למשל ניתוח נתונים, אחריו סיכום תובנות ואחריו עיצוב טבלה."}
+    },
+    {
+      "@type": "Question",
+      "name": "האם המעבר מ-Gems ל-Skills חל גם על חשבונות Google Workspace?",
+      "acceptedAnswer": {"@type": "Answer", "text": "כן, אבל מאוחר יותר. חשבונות עבודה ולימודים של Google Workspace יעברו מ-Gems ל-Skills במהלך 2027, אחרי החשבונות האישיים."}
+    },
+    {
+      "@type": "Question",
+      "name": "האם Skills יהיו זמינים בגרסה החינמית של Gemini?",
+      "acceptedAnswer": {"@type": "Answer", "text": "גוגל מתכננת להעביר את כל החשבונות האישיים ל-Skills, ונכון לסוף ספטמבר 2026 לא פרסמה מגבלות ייחודיות לגרסה החינמית של Gemini."}
+    }
+  ]
+}
+</script>
+<!-- /wp:html -->
+
+<!-- wp:paragraph -->
+<p><em>מקור: Google Gemini Apps Help, ספטמבר 2026</em><br><em>מקור: TechCrunch, ספטמבר 2026</em><br><em>מקור: 9to5Google, ספטמבר 2026</em><br><em>מקור: Android Central, ספטמבר 2026</em></p>
+<!-- /wp:paragraph -->
