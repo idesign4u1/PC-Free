@@ -3,109 +3,113 @@
 <head>
 <meta charset="utf-8">
 <title>C Style – דרושים</title>
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500;700&family=Cormorant+Garamond:wght@400;500&family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700&family=Heebo:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#ecebe6;--ink:#1c1c1c;--navy:#1e2940;--muted:#6d6a63;--line:#c9c5bb;}
+  :root{--bg:#efede8;--card:#f8f7f3;--ink:#1a1a1a;--navy:#18213a;--gold:#b0905f;--muted:#6f6b63;--line:#d6d1c6;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);font-family:Heebo,sans-serif;color:var(--ink)}
-  .canvas{width:1080px;height:1350px;position:relative;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;padding:48px 60px 0}
+  .canvas{width:1080px;height:1350px;position:relative;overflow:hidden;background:var(--bg)}
 
-  .brand{text-align:center;direction:ltr}
-  .brand .mono{width:46px;height:46px;border:1px solid var(--ink);border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px}
-  .brand .word{font-family:'Cormorant Garamond',serif;font-size:58px;letter-spacing:10px;line-height:1;font-weight:500}
-  .brand .tag{font-family:Montserrat,sans-serif;font-size:11px;letter-spacing:4px;margin-top:8px;color:var(--muted)}
+  /* HERO */
+  .hero{position:absolute;inset:0 0 auto 0;height:720px;overflow:hidden;background:var(--navy)}
+  .hero img{position:absolute;top:-60px;left:-20px;width:1120px;height:auto}
+  .hero:after{content:"";position:absolute;inset:0;background:
+     linear-gradient(to top,var(--navy) 0%,rgba(24,33,58,.92) 18%,rgba(24,33,58,.35) 42%,rgba(24,33,58,0) 60%),
+     linear-gradient(to left,rgba(24,33,58,.0) 50%,rgba(24,33,58,.25) 100%)}
+  .brand{position:absolute;top:44px;left:56px;z-index:2;color:#fff;direction:ltr;text-align:left}
+  .brand .word{font-family:'Cormorant Garamond',serif;font-size:50px;letter-spacing:9px;line-height:1;font-weight:500}
+  .brand .tag{font-family:Montserrat,sans-serif;font-size:10.5px;letter-spacing:4.5px;margin-top:8px;opacity:.85}
+  .pill{position:absolute;top:50px;right:56px;z-index:2;direction:ltr;font-family:Montserrat,sans-serif;font-weight:600;font-size:13px;letter-spacing:4px;color:#fff;border:1px solid rgba(255,255,255,.7);padding:10px 18px 10px 22px;border-radius:40px;background:rgba(255,255,255,.08);backdrop-filter:blur(4px)}
+  .headline{position:absolute;right:60px;left:60px;bottom:40px;z-index:2;color:#fff}
+  .headline .kicker{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:30px;color:#e2cfa9;direction:ltr;text-align:right;margin-bottom:2px}
+  .headline h1{font-family:'Frank Ruhl Libre',serif;font-weight:500;font-size:150px;line-height:.95;letter-spacing:-1px}
+  .headline .sub{display:flex;align-items:center;gap:18px;margin-top:18px;font-size:30px;font-weight:300}
+  .headline .sub b{font-weight:600}
+  .headline .sub i{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);display:block}
 
-  .head{text-align:center;margin-top:30px}
-  .head h1{font-family:'Frank Ruhl Libre',serif;font-weight:500;font-size:96px;line-height:1}
-  .head .sub{font-size:28px;font-weight:300;margin-top:12px}
-  .head .sub b{font-weight:500}
-  .rule{display:flex;align-items:center;gap:16px;justify-content:center;margin:20px 0 0;font-family:Montserrat,sans-serif;font-size:12px;letter-spacing:5px;color:var(--muted);direction:ltr}
-  .rule:before,.rule:after{content:"";height:1px;width:120px;background:var(--line)}
+  /* CONTENT */
+  .content{position:absolute;top:720px;left:0;right:0;bottom:150px;padding:34px 60px 0}
+  .roles{display:flex;gap:24px}
+  .role{flex:1;background:var(--card);border:1px solid var(--line);padding:22px 26px 20px;position:relative}
+  .role:before{content:"";position:absolute;top:-1px;right:-1px;width:64px;height:3px;background:var(--gold)}
+  .role .num{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);direction:ltr;text-align:right;letter-spacing:2px}
+  .role b{display:block;font-family:'Frank Ruhl Libre',serif;font-size:36px;font-weight:500;line-height:1.1;margin:2px 0 8px}
+  .role span{font-size:19px;color:#45423c;line-height:1.4;display:block;text-wrap:balance}
 
-  .body{display:flex;gap:40px;margin-top:30px;flex:1;min-height:0}
-  .photo{width:400px;flex:none;position:relative;overflow:hidden}
-  .photo img{position:absolute;top:0;left:-290px;width:702px;height:997px;display:block}
-  .photo .badge{position:absolute;bottom:22px;right:22px;left:22px;border:1px solid rgba(255,255,255,.8);color:#fff;font-family:'Frank Ruhl Libre',serif;font-size:30px;text-align:center;padding:10px 0;backdrop-filter:blur(2px);background:rgba(0,0,0,.12)}
-  .text{flex:1;display:flex;flex-direction:column;gap:22px;padding-bottom:28px}
-  h2{font-family:'Frank Ruhl Libre',serif;font-weight:500;font-size:30px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}
-  .role{margin-bottom:10px}
-  .role b{display:block;font-size:23px;font-weight:700}
-  .role span{font-size:18.5px;color:#3b3934;line-height:1.35}
+  .cols{display:flex;gap:44px;margin-top:40px}
+  .col{flex:1}
+  h2{display:flex;align-items:center;gap:14px;font-family:'Frank Ruhl Libre',serif;font-weight:500;font-size:30px;margin-bottom:12px}
+  h2:after{content:"";flex:1;height:1px;background:var(--line)}
   ul{list-style:none}
-  li{font-size:19px;line-height:1.38;padding-right:20px;position:relative;margin-bottom:3px}
-  li:before{content:"";position:absolute;right:2px;top:12px;width:7px;height:7px;border:1px solid var(--ink);transform:rotate(45deg)}
-  li.plus{font-weight:500}
+  li{font-size:20.5px;line-height:1.35;padding-right:24px;position:relative;margin-bottom:13px;text-wrap:balance}
+  li:before{content:"";position:absolute;right:3px;top:11px;width:7px;height:7px;background:var(--gold);transform:rotate(45deg)}
+  li.must{font-weight:600}
+  li.must em{font-style:normal;font-size:15px;font-weight:600;color:#fff;background:var(--navy);padding:2px 9px;border-radius:20px;margin-right:6px;vertical-align:2px}
+  li.plus{color:var(--muted)}
 
-  .strip{display:flex;gap:8px;height:150px;margin:0 -60px;padding:0}
-  .strip img{flex:1;min-width:0;object-fit:cover;object-position:50% 20%}
-
-  .cta{background:var(--navy);color:#fff;margin:0 -60px;padding:24px 60px 28px;display:flex;align-items:center;justify-content:space-between}
-  .cta .q{font-family:'Frank Ruhl Libre',serif;font-size:36px;line-height:1.15}
-  .cta .q small{display:block;font-family:Heebo;font-size:18px;font-weight:300;opacity:.8;margin-top:4px}
-  .cta .contacts{text-align:left;font-size:21px;line-height:1.6}
-  .cta .contacts div{display:flex;align-items:center;gap:10px;justify-content:flex-end}
-  .cta svg{width:30px;height:30px;fill:#fff;flex:none}
+  /* CTA */
+  .cta{position:absolute;left:0;right:0;bottom:0;height:150px;background:var(--navy);color:#fff;padding:0 60px;display:flex;align-items:center;justify-content:space-between}
+  .cta .q{font-family:'Frank Ruhl Libre',serif;font-size:40px;line-height:1.1}
+  .cta .q small{display:block;font-family:Heebo;font-size:19px;font-weight:300;opacity:.75;margin-top:8px}
+  .wa{display:flex;align-items:center;gap:14px;background:#fff;color:var(--navy);border-radius:60px;padding:16px 30px 16px 26px;direction:ltr}
+  .wa svg{width:36px;height:36px;fill:#25a35a;flex:none}
+  .wa span{font-family:Montserrat,sans-serif;font-size:32px;font-weight:600;letter-spacing:1px}
 </style>
 </head>
 <body>
 <div class="canvas">
-  <div class="brand">
-    <div class="mono">c</div>
-    <div class="word">Ć STYLE</div>
-    <div class="tag">ELEGANCE IN MODESTY</div>
-  </div>
-
-  <div class="head">
-    <h1>דרושות/ים</h1>
-    <div class="sub">לצוות <b>"סי סטייל"</b> · סניף <b>מול החוף ויליג'</b></div>
-    <div class="rule">WE'RE HIRING</div>
-  </div>
-
-  <div class="body">
-    <div class="photo">
-      <img src="img/fall.jpg" alt="">
-      <div class="badge">הרשת מתרחבת ✦</div>
+  <div class="hero">
+    <img src="img/fall.jpg" alt="">
+    <div class="brand">
+      <div class="word">Ć STYLE</div>
+      <div class="tag">ELEGANCE IN MODESTY</div>
     </div>
-    <div class="text">
-      <div>
-        <h2>התפקידים</h2>
-        <div class="role"><b>אחראית/י משמרת</b><span>ניהול משמרת, הובלת צוות, עמידה ביעדים ותפעול שוטף</span></div>
-        <div class="role"><b>מוכרניות/ים</b><span>שירות מעולה, סטיילינג אישי ללקוחות ומכירות באווירה כיפית</span></div>
+    <div class="pill">WE'RE HIRING</div>
+    <div class="headline">
+      <div class="kicker">join our team</div>
+      <h1>דרושות/ים</h1>
+      <div class="sub"><span>לצוות <b>סי סטייל</b></span><i></i><span>סניף <b>מול החוף ויליג'</b></span></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="roles">
+      <div class="role">
+        <div class="num">01</div>
+        <b>אחראית/י משמרת</b>
+        <span>ניהול משמרת, הובלת צוות, עמידה ביעדים ותפעול שוטף</span>
       </div>
-      <div>
+      <div class="role">
+        <div class="num">02</div>
+        <b>מוכרניות/ים</b>
+        <span>שירות מעולה, סטיילינג אישי ללקוחות ומכירות באווירה כיפית</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="col">
         <h2>מה אנחנו מחפשים?</h2>
         <ul>
-          <li>גיל 18 ומעלה (חובה)</li>
+          <li class="must">זמינות למשמרות בוקר וערב<em>חובה</em></li>
           <li>אהבה לעולם האופנה והסטיילינג</li>
           <li>יחסי אנוש מעולים וחיוך רחב</li>
-          <li>עבודה במשמרות, כולל סופ"ש/ערבים</li>
-          <li class="plus">ניסיון במכירות/ניהול משמרת – יתרון!</li>
+          <li class="plus">ניסיון במכירות/ניהול משמרת – יתרון</li>
         </ul>
       </div>
-      <div>
+      <div class="col">
         <h2>מה אנחנו מציעים?</h2>
         <ul>
-          <li>תנאים מעולים ושכר מתגמל</li>
-          <li>סביבה צעירה, דינמית ואופנתית</li>
-          <li>אפשרויות קידום והתפתחות ברשת</li>
+          <li>תנאים מעולים ושכר מתגמל בהתאם לתפקיד ולניסיון</li>
+          <li>סביבת עבודה צעירה, דינמית ואופנתית</li>
+          <li>במתחם התוסס של מול החוף ויליג'</li>
         </ul>
       </div>
     </div>
-  </div>
-
-  <div class="strip">
-    <img src="img/white_shirt.jpg" alt="">
-    <img src="img/plaid.jpg" alt="">
-    <img src="img/glasses.jpg" alt="" style="object-position:60% 15%">
-    <img src="img/black_top.jpg" alt="">
-    <img src="img/white_sofa.jpg" alt="">
   </div>
 
   <div class="cta">
     <div class="q">נשמע מתאים? בואו לעבוד איתנו!<small>שלחו קורות חיים או הודעת וואטסאפ</small></div>
-    <div class="contacts">
-      <div><span style="direction:ltr;font-size:30px;font-weight:500;letter-spacing:1px">054-619-4733</span><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3z"/></svg></div>
-    </div>
+    <div class="wa"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3z"/></svg><span>054-619-4733</span></div>
   </div>
 </div>
 </body>
