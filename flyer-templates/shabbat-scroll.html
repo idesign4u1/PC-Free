@@ -1,0 +1,61 @@
+<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>
+@font-face{font-family:FR;font-weight:900;src:url(node_modules/@fontsource/frank-ruhl-libre/files/frank-ruhl-libre-hebrew-900-normal.woff2)}
+@font-face{font-family:FR;font-weight:900;src:url(node_modules/@fontsource/frank-ruhl-libre/files/frank-ruhl-libre-latin-900-normal.woff2);unicode-range:U+0000-00FF}
+@font-face{font-family:FR;font-weight:700;src:url(node_modules/@fontsource/frank-ruhl-libre/files/frank-ruhl-libre-hebrew-700-normal.woff2)}
+@font-face{font-family:FR;font-weight:700;src:url(node_modules/@fontsource/frank-ruhl-libre/files/frank-ruhl-libre-latin-700-normal.woff2);unicode-range:U+0000-00FF}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1540px;position:relative;overflow:hidden;font-family:FR;color:#1b1b1b;background:radial-gradient(ellipse 80% 60% at 50% 40%,#fff3d6 0%,#f1d39a 60%,#d9ad5f 100%)}
+.abs{position:absolute}
+.scroll{left:70px;right:70px;top:30px;bottom:30px;border-radius:14px;background:radial-gradient(ellipse 90% 70% at 50% 40%,#ffffff 0%,#fffaf0 55%,#f8ebcf 100%);box-shadow:0 0 0 3px #c99a46,0 0 0 9px #f5e6c4,0 0 0 11px #a8782a,0 16px 40px rgba(120,80,20,.35)}
+.head{left:70px;right:70px;top:30px;height:250px;border-radius:14px 14px 0 0;background:linear-gradient(180deg,#fff2cf,#f6dc9c 60%,#ecc778);border-bottom:3px solid #a8782a}
+.rule{left:150px;right:150px;height:3px;background:linear-gradient(90deg,transparent,#1f2b5a 15%,#1f2b5a 85%,transparent)}
+.c{left:70px;right:70px;text-align:center}
+.navy{color:#1f2b5a} .red{color:#b0201a}
+.sec{right:150px;font-weight:900;font-size:46px;color:#1f2b5a;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:8px}
+.row{display:flex;align-items:baseline;width:640px;font-size:40px;font-weight:700;height:62px}
+.row .n{white-space:nowrap}
+.row .dots{flex:1;border-bottom:4px dotted #1b1b1b;margin:0 14px;transform:translateY(-8px)}
+.row .t{font-weight:900;direction:ltr;min-width:110px;text-align:left}
+.row small{font-size:26px;font-weight:700;color:#5a4a2a}
+.foot{left:230px;right:110px;bottom:62px;height:146px;border-radius:70px;background:linear-gradient(180deg,#3a52a8,#24387e);border:3px solid #d4a855;box-shadow:0 8px 20px rgba(0,0,0,.35);color:#fff;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.gold{background:linear-gradient(180deg,#fff1c4,#f2cd73 40%,#c98f2c 75%,#f4d68a);-webkit-background-clip:text;color:transparent}
+</style></head><body>
+<svg width="0" height="0" class="abs"><defs>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a5a16"/><stop offset=".25" stop-color="#f6d98e"/><stop offset=".5" stop-color="#c38b2c"/><stop offset=".75" stop-color="#fbe7aa"/><stop offset="1" stop-color="#8a5a16"/></linearGradient>
+ <linearGradient id="goldv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7dc95"/><stop offset="1" stop-color="#9a6a1f"/></linearGradient>
+ <linearGradient id="wax" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9e2d2"/><stop offset=".45" stop-color="#fffdf7"/><stop offset="1" stop-color="#d8cfbc"/></linearGradient>
+ <radialGradient id="flame" cx=".5" cy=".75" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#fff3b0"/><stop offset=".6" stop-color="#ffb43c"/><stop offset="1" stop-color="#ff6a10" stop-opacity="0"/></radialGradient>
+ <radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd27a" stop-opacity=".9"/><stop offset=".4" stop-color="#ffb24a" stop-opacity=".35"/><stop offset="1" stop-color="#ff9a30" stop-opacity="0"/></radialGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+ <symbol id="candle" viewBox="0 0 120 420">
+  <circle cx="60" cy="52" r="58" fill="url(#halo)"/>
+  <path d="M60 6 C70 26 78 38 76 56 C74 72 66 80 60 80 C54 80 46 72 44 56 C42 38 50 26 60 6Z" fill="url(#flame)" filter="url(#soft)"/>
+  <path d="M60 40 C64 50 66 56 65 63 C64 70 62 73 60 73 C58 73 56 70 55 63 C54 56 56 50 60 40Z" fill="#fff" opacity=".95"/>
+  <path d="M60 70 V88" stroke="#2a1a0a" stroke-width="3" stroke-linecap="round"/>
+  <rect x="42" y="86" width="36" height="170" rx="5" fill="url(#wax)"/>
+  <ellipse cx="60" cy="88" rx="18" ry="5" fill="#fffaf0"/>
+  <path d="M24 256 H96 L88 272 H32Z" fill="url(#gold)"/><ellipse cx="60" cy="256" rx="36" ry="7" fill="url(#gold)"/>
+  <rect x="52" y="272" width="16" height="22" fill="url(#gold)"/><ellipse cx="60" cy="300" rx="20" ry="10" fill="url(#gold)"/>
+  <path d="M54 308 C50 340 46 352 40 366 H80 C74 352 70 340 66 308Z" fill="url(#gold)"/>
+  <path d="M18 392 C24 370 40 364 60 364 C80 364 96 370 102 392Z" fill="url(#gold)"/><rect x="12" y="390" width="96" height="12" rx="6" fill="url(#gold)"/>
+ </symbol>
+</defs></svg>
+<div class="abs scroll"></div><div class="abs head"></div>
+<div class="abs" style="right:96px;top:44px;font-weight:700;font-size:26px;color:#1f2b5a;z-index:3">ב״ה</div>
+<img class="abs" src="logo.png" style="left:290px;top:24px;width:500px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.35))">
+<div class="abs rule" style="top:304px"></div>
+<div class="abs c navy" style="top:330px;font-weight:900;font-size:50px">זמני התפילות לשבת פרשת:</div>
+<div class="abs c" style="top:398px;font-weight:900;font-size:96px;line-height:1.1"><span class="red">״וַיִּשְׁלַח״</span></div>
+<div class="abs c navy" style="top:518px;font-weight:700;font-size:38px">״קָטֹנְתִּי מִכֹּל הַחֲסָדִים וּמִכָּל הָאֱמֶת״ <span style="font-size:24px;color:#6a5a3a">(בראשית לב, יא)</span></div>
+<div class="abs rule" style="top:584px"></div>
+<div class="abs sec" style="top:610px">הדלקת נרות וצאת השבת</div>
+<div class="abs" style="right:150px;top:686px"><div class="row"><span class="n">הדלקת נרות</span><span class="dots"></span><span class="t">16:05</span></div><div class="row"><span class="n">צאת השבת</span><span class="dots"></span><span class="t">17:14</span></div></div>
+<div class="abs sec" style="top:830px">ערב שבת קודש</div>
+<div class="abs" style="right:150px;top:906px"><div class="row"><span class="n">מנחה וקבלת שבת</span><span class="dots"></span><span class="t">16:10</span></div></div>
+<div class="abs sec" style="top:990px">שבת קודש</div>
+<div class="abs" style="right:150px;top:1066px"><div class="row"><span class="n">שחרית <small>(הודו)</small></span><span class="dots"></span><span class="t">8:00</span></div><div class="row"><span class="n">מנחה</span><span class="dots"></span><span class="t">15:50</span></div><div class="row"><span class="n">ערבית מוצאי שבת</span><span class="dots"></span><span class="t">17:05</span></div></div>
+<svg class="abs" style="left:78px;top:1010px;z-index:5" width="110" height="385" viewBox="0 0 120 420"><use href="#candle"/></svg>
+<svg class="abs" style="left:166px;top:1050px;z-index:5" width="100" height="350" viewBox="0 0 120 420"><use href="#candle"/></svg>
+<div class="abs foot"><div class="gold" style="font-weight:900;font-size:58px;line-height:1">שבת שלום ומבורך</div>
+<div style="font-weight:700;font-size:21px;color:#f0d79a;margin-top:10px">בית הכנסת היכל אברהם ומנטינה ז״ל · רחוב הצוקים 8, עין הים</div></div>
+</body></html>
